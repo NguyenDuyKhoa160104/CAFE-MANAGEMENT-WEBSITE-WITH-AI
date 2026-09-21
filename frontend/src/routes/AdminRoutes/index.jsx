@@ -6,6 +6,9 @@ import MenuManagement from '../../pages/Admin/MenuManagement';
 import Profile from '../../pages/Admin/Profile';
 import TableManagement from '../../pages/Admin/TableManagement';
 import StaffManagement from '../../pages/Admin/StaffManagement';
+import AdminOrders from '../../pages/Admin/Orders';
+import AdminInvoices from '../../pages/Admin/Invoices';
+import InventoryManagement from '../../pages/Admin/InventoryManagement';
 import useAdminAuth from '../../hooks/useAdminAuth';
 
 const ProtectedAdminRoute = ({ children }) => {
@@ -36,6 +39,9 @@ const adminRoutes = (
             <Route path="menus" element={<MenuManagement />} />
             <Route path="tables" element={<TableManagement />} />
             <Route path="staffs" element={<StaffManagement />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="invoices" element={<AdminInvoices />} />
+            <Route path="inventory" element={<InventoryManagement />} />
             <Route path="profile" element={<Profile />} />
         </Route>
 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Coffee, EyeOff, Package, Plus, RefreshCw, Search, Eye, Pencil, Trash2, Image as ImageIcon, Star } from "lucide-react";
+import { Coffee, EyeOff, Package, Plus, RefreshCw, Search, Eye, Pencil, Trash2, Image as ImageIcon, Star, CookingPot } from "lucide-react";
 import ProductStatusBadge from "./ProductStatusBadge";
 import ProductFormModal from "./ProductFormModal";
 import ProductDetailModal from "./ProductDetailModal";
 import DeleteProductModal from "./DeleteProductModal";
+import ProductRecipeModal from "./ProductRecipeModal";
 import { productService } from "../../../services/admin/product.service";
 import { categoryService } from "../../../services/admin/category.service";
 import { showSuccess, showError } from "../../../utils/toast";
@@ -44,6 +45,7 @@ const ProductsTab = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [isRecipeOpen, setIsRecipeOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
 
     // Status loading tracking
@@ -436,6 +438,16 @@ const ProductsTab = () => {
                                                 <button 
                                                     onClick={() => {
                                                         setSelectedProduct(product);
+                                                        setIsRecipeOpen(true);
+                                                    }}
+                                                    className="flex h-7 w-7 items-center justify-center rounded-md text-[#958981] hover:bg-[#eaf1ff] hover:text-purple-600"
+                                                    title="Công thức (Recipe)"
+                                                >
+                                                    <CookingPot size={14} />
+                                                </button>
+                                                <button 
+                                                    onClick={() => {
+                                                        setSelectedProduct(product);
                                                         setIsDeleteOpen(true);
                                                     }}
                                                     className="flex h-7 w-7 items-center justify-center rounded-md text-[#958981] hover:bg-[#ffeeec] hover:text-red-600"
@@ -506,6 +518,16 @@ const ProductsTab = () => {
                 product={selectedProduct}
                 onSuccess={() => {
                     setIsDeleteOpen(false);
+                    fetchProducts();
+                }}
+            />
+
+            <ProductRecipeModal
+                isOpen={isRecipeOpen}
+                onClose={() => setIsRecipeOpen(false)}
+                product={selectedProduct}
+                onSuccess={() => {
+                    setIsRecipeOpen(false);
                     fetchProducts();
                 }}
             />

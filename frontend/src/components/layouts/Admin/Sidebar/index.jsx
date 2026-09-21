@@ -11,6 +11,7 @@ import {
     LayoutDashboard,
     LogOut,
     ReceiptText,
+    Receipt,
     ShieldCheck,
     UserCircle,
     Users,
@@ -46,9 +47,14 @@ const menuItems = [
         path: "/admin/menus",
     },
     {
-        name: "Quản lý hóa đơn",
+        name: "Quản lý đơn hàng",
         icon: ReceiptText,
         path: "/admin/orders",
+    },
+    {
+        name: "Quản lý hóa đơn",
+        icon: Receipt,
+        path: "/admin/invoices",
     },
     {
         name: "Quản lý kho",

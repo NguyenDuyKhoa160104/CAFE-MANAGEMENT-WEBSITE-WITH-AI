@@ -6,6 +6,7 @@ import {
     LayoutDashboard,
     LogOut,
     ReceiptText,
+    Receipt,
     UserCircle,
     X,
 } from "lucide-react";
@@ -26,12 +27,16 @@ const menuItems = [
         name: "Đơn hàng",
         icon: ReceiptText,
         path: "/staff/orders",
-        badge: "Sắp có",
     },
     {
         name: "Thực đơn",
         icon: Coffee,
         path: "/staff/menu",
+    },
+    {
+        name: "Hóa đơn",
+        icon: Receipt,
+        path: "/staff/invoices",
     },
 ];
 

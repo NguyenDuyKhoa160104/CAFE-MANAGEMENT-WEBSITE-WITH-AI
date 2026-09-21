@@ -34,4 +34,9 @@ class Staff extends Authenticatable
         'hire_date' => 'date',
         'base_salary' => 'decimal:2',
     ];
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'staff_id');
+    }
 }
