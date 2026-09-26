@@ -34,8 +34,8 @@ const Home = () => {
                 <div className="absolute -right-32 -bottom-32 h-[500px] w-[500px] rounded-full bg-[#E9DFD8]/10 blur-3xl" />
                 
                 <div className="container mx-auto max-w-4xl relative z-10 flex flex-col items-center text-center">
-                    <div className="mb-8 p-4 bg-white/5 rounded-3xl backdrop-blur-sm border border-white/10">
-                        <BrandLogo className="h-20 md:h-24 brightness-0 invert opacity-90 drop-shadow-lg" />
+                    <div className="mb-8 p-4 bg-white/95 rounded-3xl shadow-xl backdrop-blur-sm border border-white/20">
+                        <BrandLogo className="h-20 md:h-24 scale-110 drop-shadow-sm" />
                     </div>
                     
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white tracking-tight">

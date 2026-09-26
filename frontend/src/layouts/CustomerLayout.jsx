@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import CustomerHeader from '../components/customer/CustomerHeader';
 import CustomerFooter from '../components/customer/CustomerFooter';
+import AIChatBubble from '../components/customer/ai/AIChatBubble';
 
 const CustomerLayout = () => {
     return (
@@ -11,6 +12,7 @@ const CustomerLayout = () => {
                 <Outlet />
             </main>
             <CustomerFooter />
+            <AIChatBubble />
         </div>
     );
 };

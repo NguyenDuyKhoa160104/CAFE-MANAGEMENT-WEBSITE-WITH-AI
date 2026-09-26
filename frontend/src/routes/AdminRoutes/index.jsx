@@ -11,6 +11,8 @@ import AdminInvoices from '../../pages/Admin/Invoices';
 import InventoryManagement from '../../pages/Admin/InventoryManagement';
 import useAdminAuth from '../../hooks/useAdminAuth';
 
+import AIAdmin from '../../pages/Admin/AI';
+
 const ProtectedAdminRoute = ({ children }) => {
     const { isLoggedIn } = useAdminAuth();
 
@@ -43,6 +45,7 @@ const adminRoutes = (
             <Route path="invoices" element={<AdminInvoices />} />
             <Route path="inventory" element={<InventoryManagement />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="ai" element={<AIAdmin />} />
         </Route>
 
         <Route path="/admin/login" element={<PublicAdminRoute><AdminLogin /></PublicAdminRoute>} />

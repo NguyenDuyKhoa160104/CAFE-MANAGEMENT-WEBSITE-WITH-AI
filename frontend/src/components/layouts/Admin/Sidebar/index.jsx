@@ -78,10 +78,10 @@ const menuItems = [
         path: "/admin/reports",
     },
     {
-        name: "AI Analytics",
+        name: "Quản lý AI",
         icon: BrainCircuit,
         ai: true,
-        path: "/admin/ai-insights",
+        path: "/admin/ai",
     },
 ];
 
