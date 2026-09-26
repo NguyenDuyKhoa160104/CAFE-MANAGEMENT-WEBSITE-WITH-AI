@@ -14,7 +14,7 @@ class StaffController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Staff::query();
+        $query = Staff::with('role');
 
         if ($request->has('search')) {
             $search = $request->search;
@@ -98,7 +98,7 @@ class StaffController extends Controller
 
     public function show($id)
     {
-        $staff = Staff::find($id);
+        $staff = Staff::with('role')->find($id);
 
         if (!$staff) {
             return response()->json(['message' => 'Không tìm thấy nhân viên'], 404);

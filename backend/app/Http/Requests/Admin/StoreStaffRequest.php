@@ -29,6 +29,7 @@ class StoreStaffRequest extends FormRequest
             'password' => 'required|string|min:8|confirmed',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'position' => 'required|in:MANAGER,CASHIER,BARISTA,SERVER',
+            'role_id' => 'nullable|exists:roles,id',
             'hire_date' => 'nullable|date',
             'base_salary' => 'nullable|numeric|min:0',
             'status' => 'required|in:ACTIVE,INACTIVE,LOCKED',

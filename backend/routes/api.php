@@ -62,35 +62,72 @@ Route::middleware(['auth:sanctum', 'staff_middleware'])->group(function () {
     Route::post('/staff/logout', [\App\Http\Controllers\Api\Staff\StaffAuthController::class, 'logout']);
     Route::post('/staff/logout-all', [\App\Http\Controllers\Api\Staff\StaffAuthController::class, 'logoutAll']);
     
+    // Dashboard
+    Route::middleware('staff.permission:dashboard.view')->group(function () {
+        Route::get('/staff/dashboard', [\App\Http\Controllers\Api\Staff\DashboardController::class, 'index']);
+    });
+
     // Profile
     Route::post('/staff/profile/avatar', [\App\Http\Controllers\Api\Staff\StaffAuthController::class, 'uploadAvatar']);
     Route::delete('/staff/profile/avatar', [\App\Http\Controllers\Api\Staff\StaffAuthController::class, 'removeAvatar']);
 
     // Staff Table & Area
-    Route::get('/staff/areas', [\App\Http\Controllers\Api\Staff\TableController::class, 'getAreas']);
-    Route::get('/staff/tables', [\App\Http\Controllers\Api\Staff\TableController::class, 'getTables']);
-    Route::get('/staff/tables/{id}', [\App\Http\Controllers\Api\Staff\TableController::class, 'getTableDetail']);
+    Route::middleware('staff.permission:tables.view')->group(function () {
+        Route::get('/staff/areas', [\App\Http\Controllers\Api\Staff\TableController::class, 'getAreas']);
+        Route::get('/staff/tables', [\App\Http\Controllers\Api\Staff\TableController::class, 'getTables']);
+        Route::get('/staff/tables/{id}', [\App\Http\Controllers\Api\Staff\TableController::class, 'getTableDetail']);
+    });
 
-    // Staff Menu
+    // Staff Menu (No permission required for viewing menu)
     Route::get('/staff/categories', [\App\Http\Controllers\Api\Staff\MenuController::class, 'getCategories']);
     Route::get('/staff/products', [\App\Http\Controllers\Api\Staff\MenuController::class, 'getProducts']);
     Route::get('/staff/products/{id}', [\App\Http\Controllers\Api\Staff\MenuController::class, 'getProductDetail']);
 
     // Staff Orders
-    Route::get('/staff/orders', [\App\Http\Controllers\Api\Staff\OrderController::class, 'index']);
-    Route::post('/staff/orders', [\App\Http\Controllers\Api\Staff\OrderController::class, 'store']);
-    Route::get('/staff/orders/{id}', [\App\Http\Controllers\Api\Staff\OrderController::class, 'show']);
-    Route::put('/staff/orders/{id}', [\App\Http\Controllers\Api\Staff\OrderController::class, 'update']);
-    Route::post('/staff/orders/{id}/items', [\App\Http\Controllers\Api\Staff\OrderController::class, 'addItem']);
-    Route::put('/staff/orders/{id}/items/{itemId}', [\App\Http\Controllers\Api\Staff\OrderController::class, 'updateItem']);
-    Route::delete('/staff/orders/{id}/items/{itemId}', [\App\Http\Controllers\Api\Staff\OrderController::class, 'removeItem']);
-    Route::patch('/staff/orders/{id}/status', [\App\Http\Controllers\Api\Staff\OrderController::class, 'updateStatus']);
-    Route::patch('/staff/orders/{id}/cancel', [\App\Http\Controllers\Api\Staff\OrderController::class, 'cancel']);
-    Route::post('/staff/orders/{id}/checkout', [\App\Http\Controllers\Api\Staff\OrderController::class, 'checkout']);
+    Route::middleware('staff.permission:orders.view')->group(function () {
+        Route::get('/staff/orders', [\App\Http\Controllers\Api\Staff\OrderController::class, 'index']);
+        Route::get('/staff/orders/{id}', [\App\Http\Controllers\Api\Staff\OrderController::class, 'show']);
+    });
+    
+    Route::middleware('staff.permission:orders.create')->group(function () {
+        Route::post('/staff/orders', [\App\Http\Controllers\Api\Staff\OrderController::class, 'store']);
+        Route::post('/staff/orders/{id}/items', [\App\Http\Controllers\Api\Staff\OrderController::class, 'addItem']);
+    });
+
+    Route::middleware('staff.permission:orders.update')->group(function () {
+        Route::put('/staff/orders/{id}', [\App\Http\Controllers\Api\Staff\OrderController::class, 'update']);
+        Route::put('/staff/orders/{id}/items/{itemId}', [\App\Http\Controllers\Api\Staff\OrderController::class, 'updateItem']);
+        Route::delete('/staff/orders/{id}/items/{itemId}', [\App\Http\Controllers\Api\Staff\OrderController::class, 'removeItem']);
+        Route::patch('/staff/orders/{id}/cancel', [\App\Http\Controllers\Api\Staff\OrderController::class, 'cancel']);
+    });
+
+    Route::middleware('staff.permission:orders.status')->group(function () {
+        Route::patch('/staff/orders/{id}/status', [\App\Http\Controllers\Api\Staff\OrderController::class, 'updateStatus']);
+    });
+
+    Route::middleware('staff.permission:orders.checkout')->group(function () {
+        Route::post('/staff/orders/{id}/checkout', [\App\Http\Controllers\Api\Staff\OrderController::class, 'checkout']);
+    });
 
     // Staff Invoices
-    Route::get('/staff/invoices', [\App\Http\Controllers\Api\Staff\InvoiceController::class, 'index']);
-    Route::get('/staff/invoices/{id}', [\App\Http\Controllers\Api\Staff\InvoiceController::class, 'show']);
+    Route::middleware('staff.permission:invoices.view')->group(function () {
+        Route::get('/staff/invoices', [\App\Http\Controllers\Api\Staff\InvoiceController::class, 'index']);
+        Route::get('/staff/invoices/{id}', [\App\Http\Controllers\Api\Staff\InvoiceController::class, 'show']);
+    });
+    
+    // Staff Attendance
+    Route::middleware('staff.permission:attendance.view_self')->group(function () {
+        Route::get('/staff/attendance/today', [\App\Http\Controllers\Api\Staff\StaffAttendanceController::class, 'today']);
+        Route::get('/staff/attendance/history', [\App\Http\Controllers\Api\Staff\StaffAttendanceController::class, 'history']);
+    });
+    
+    Route::middleware('staff.permission:attendance.check_in')->group(function () {
+        Route::post('/staff/attendance/check-in', [\App\Http\Controllers\Api\Staff\StaffAttendanceController::class, 'checkIn']);
+    });
+    
+    Route::middleware('staff.permission:attendance.check_out')->group(function () {
+        Route::post('/staff/attendance/check-out', [\App\Http\Controllers\Api\Staff\StaffAttendanceController::class, 'checkOut']);
+    });
 });
 
 Route::middleware(['auth:sanctum', 'admin_middleware'])->group(function () {
@@ -204,4 +241,44 @@ Route::middleware(['auth:sanctum', 'admin_middleware'])->group(function () {
     Route::put('/admin/ai/knowledge/{id}', [\App\Http\Controllers\Api\Admin\AIKnowledgeController::class, 'update']);
     Route::patch('/admin/ai/knowledge/{id}/status', [\App\Http\Controllers\Api\Admin\AIKnowledgeController::class, 'updateStatus']);
     Route::delete('/admin/ai/knowledge/{id}', [\App\Http\Controllers\Api\Admin\AIKnowledgeController::class, 'destroy']);
+    
+    // HR - Roles & Permissions
+    Route::get('/admin/roles', [\App\Http\Controllers\Api\Admin\RoleController::class, 'index']);
+    Route::post('/admin/roles', [\App\Http\Controllers\Api\Admin\RoleController::class, 'store']);
+    Route::get('/admin/roles/{id}', [\App\Http\Controllers\Api\Admin\RoleController::class, 'show']);
+    Route::put('/admin/roles/{id}', [\App\Http\Controllers\Api\Admin\RoleController::class, 'update']);
+    Route::patch('/admin/roles/{id}/status', [\App\Http\Controllers\Api\Admin\RoleController::class, 'updateStatus']);
+    Route::delete('/admin/roles/{id}', [\App\Http\Controllers\Api\Admin\RoleController::class, 'destroy']);
+    Route::put('/admin/roles/{id}/permissions', [\App\Http\Controllers\Api\Admin\RoleController::class, 'updatePermissions']);
+    Route::get('/admin/permissions', [\App\Http\Controllers\Api\Admin\RoleController::class, 'getPermissions']);
+    
+    // HR - Work Shifts
+    Route::get('/admin/work-shifts', [\App\Http\Controllers\Api\Admin\WorkShiftController::class, 'index']);
+    Route::post('/admin/work-shifts', [\App\Http\Controllers\Api\Admin\WorkShiftController::class, 'store']);
+    Route::put('/admin/work-shifts/{id}', [\App\Http\Controllers\Api\Admin\WorkShiftController::class, 'update']);
+    Route::patch('/admin/work-shifts/{id}/status', [\App\Http\Controllers\Api\Admin\WorkShiftController::class, 'updateStatus']);
+    Route::delete('/admin/work-shifts/{id}', [\App\Http\Controllers\Api\Admin\WorkShiftController::class, 'destroy']);
+    
+    // HR - Shift Assignments
+    Route::get('/admin/shift-assignments', [\App\Http\Controllers\Api\Admin\ShiftAssignmentController::class, 'index']);
+    Route::post('/admin/shift-assignments', [\App\Http\Controllers\Api\Admin\ShiftAssignmentController::class, 'store']);
+    Route::put('/admin/shift-assignments/{id}', [\App\Http\Controllers\Api\Admin\ShiftAssignmentController::class, 'update']);
+    Route::delete('/admin/shift-assignments/{id}', [\App\Http\Controllers\Api\Admin\ShiftAssignmentController::class, 'destroy']);
+    
+    // HR - Attendances
+    Route::get('/admin/attendance', [\App\Http\Controllers\Api\Admin\AttendanceController::class, 'index']);
+    Route::patch('/admin/attendance/{id}/adjust', [\App\Http\Controllers\Api\Admin\AttendanceController::class, 'adjust']);
+    
+    // Payroll Periods
+    Route::get('/admin/payroll-periods', [\App\Http\Controllers\Api\Admin\PayrollController::class, 'periods']);
+    Route::post('/admin/payroll-periods', [\App\Http\Controllers\Api\Admin\PayrollController::class, 'storePeriod']);
+    Route::get('/admin/payroll-periods/{id}', [\App\Http\Controllers\Api\Admin\PayrollController::class, 'periodDetail']);
+    Route::put('/admin/payroll-periods/{id}', [\App\Http\Controllers\Api\Admin\PayrollController::class, 'updatePeriod']);
+    Route::delete('/admin/payroll-periods/{id}', [\App\Http\Controllers\Api\Admin\PayrollController::class, 'destroyPeriod']);
+    Route::post('/admin/payroll-periods/{id}/generate', [\App\Http\Controllers\Api\Admin\PayrollController::class, 'generate']);
+    Route::post('/admin/payroll-periods/{id}/confirm', [\App\Http\Controllers\Api\Admin\PayrollController::class, 'confirmPeriod']);
+    Route::post('/admin/payroll-periods/{id}/mark-paid', [\App\Http\Controllers\Api\Admin\PayrollController::class, 'markPaidPeriod']);
+    
+    // Payroll Adjustments
+    Route::patch('/admin/payrolls/{id}/adjustments', [\App\Http\Controllers\Api\Admin\PayrollController::class, 'adjustPayroll']);
 });

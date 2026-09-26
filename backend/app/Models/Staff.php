@@ -22,6 +22,7 @@ class Staff extends Authenticatable
         'avatar',
         'avatar_public_id',
         'position',
+        'role_id',
         'hire_date',
         'base_salary',
         'status',
@@ -39,5 +40,19 @@ class Staff extends Authenticatable
     public function orders()
     {
         return $this->hasMany(Order::class, 'staff_id');
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function hasPermission(string $permissionCode): bool
+    {
+        if (!$this->role || $this->role->status !== 'ACTIVE') {
+            return false;
+        }
+
+        return $this->role->permissions()->where('permission_code', $permissionCode)->exists();
     }
 }

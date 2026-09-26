@@ -39,6 +39,11 @@ class StaffAuthController extends Controller
 
         $avatarUrl = $staff->avatar ? (str_starts_with($staff->avatar, 'http') ? $staff->avatar : url('storage/' . $staff->avatar)) : null;
 
+        $staff->load('role.permissions');
+        $permissions = $staff->role && $staff->role->status === 'ACTIVE' 
+            ? $staff->role->permissions->pluck('permission_code')->toArray() 
+            : [];
+
         return response()->json([
             'message' => 'Đăng nhập thành công',
             'token' => $token,
@@ -51,6 +56,8 @@ class StaffAuthController extends Controller
                 'avatar' => $staff->avatar,
                 'avatar_url' => $avatarUrl,
                 'position' => $staff->position,
+                'role' => $staff->role,
+                'permissions' => $permissions,
                 'status' => $staff->status,
             ]
         ], 200);
@@ -61,8 +68,14 @@ class StaffAuthController extends Controller
         $staff = $request->user();
         $avatarUrl = $staff->avatar ? (str_starts_with($staff->avatar, 'http') ? $staff->avatar : url('storage/' . $staff->avatar)) : null;
         
+        $staff->load('role.permissions');
+        $permissions = $staff->role && $staff->role->status === 'ACTIVE' 
+            ? $staff->role->permissions->pluck('permission_code')->toArray() 
+            : [];
+
         $staffData = $staff->toArray();
         $staffData['avatar_url'] = $avatarUrl;
+        $staffData['permissions'] = $permissions;
 
         // Ensure sensitive info is hidden (password and remember_token are already hidden in the Model)
 
