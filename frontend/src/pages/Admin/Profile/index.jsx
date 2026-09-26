@@ -77,7 +77,7 @@ const Profile = () => {
             </div>
 
             {/* PROFILE SUMMARY */}
-            <ProfileSummary admin={profile} />
+            <ProfileSummary admin={profile} onUpdate={handleProfileUpdate} />
 
             {/* MAIN LAYOUT */}
             <div className="flex flex-col lg:flex-row gap-6">

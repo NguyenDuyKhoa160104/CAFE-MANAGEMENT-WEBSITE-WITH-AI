@@ -137,12 +137,13 @@ const ProductFormModal = ({ isOpen, onClose, onSuccess, initialData = null }) =>
             
             if (imageFile) {
                 submitData.append('image', imageFile);
-            } else if (!imagePreview && isEdit) {
-                submitData.append('remove_image', 1);
             }
 
             let response;
             if (isEdit) {
+                if (!imagePreview && !imageFile && initialData.image) {
+                    await productService.removeImage(initialData.id);
+                }
                 response = await productService.update(initialData.id, submitData);
             } else {
                 response = await productService.create(submitData);
@@ -300,7 +301,7 @@ const ProductFormModal = ({ isOpen, onClose, onSuccess, initialData = null }) =>
                                             </button>
                                         )}
                                     </div>
-                                    <p className="mt-1.5 text-[10px] text-[#9c918a]">Định dạng JPG, PNG. Kích thước tối đa 2MB.</p>
+                                    <p className="mt-1.5 text-[10px] text-[#9c918a]">Định dạng JPG, PNG. Kích thước tối đa 5MB.</p>
                                 </div>
                             </div>
                         </div>

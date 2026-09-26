@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import BrandLogo from "../../../common/BrandLogo";
 
 import {
     Armchair,
@@ -114,10 +115,7 @@ const AdminSidebar = ({
             >
                 {/* LOGO */}
                 <div className="flex h-[72px] items-center border-b border-[#ebe3dd] px-5">
-                    <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#604238] text-white">
-                        <Coffee size={22} />
-                    </div>
-
+                    <BrandLogo className="mr-3 h-8" />
                     <div>
                         <h2 className="text-lg font-bold text-[#49332b]">
                             CafeFlow

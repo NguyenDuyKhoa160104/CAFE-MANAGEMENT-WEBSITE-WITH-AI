@@ -17,6 +17,11 @@ const createApi = (baseURL, tokenKey) => {
                 config.headers.Authorization = `Bearer ${token}`;
             }
 
+            // Remove Content-Type if sending FormData so browser sets it correctly with boundary
+            if (config.data instanceof FormData) {
+                delete config.headers["Content-Type"];
+            }
+
             return config;
         },
         (error) => Promise.reject(error)

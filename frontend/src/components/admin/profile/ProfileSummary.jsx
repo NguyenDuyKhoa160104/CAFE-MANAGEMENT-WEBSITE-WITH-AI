@@ -1,13 +1,12 @@
-import React from 'react';
-import { Camera, Monitor, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { Monitor, ShieldCheck } from 'lucide-react';
+import AvatarUploader from '../../common/AvatarUploader';
+import { uploadAdminAvatar, removeAdminAvatar } from '../../../services/admin/profile.service';
+import { showSuccess, showError } from '../../../utils/toast';
+import { getApiErrorMessage } from '../../../utils/apiError';
 
-const ProfileSummary = ({ admin }) => {
-    const getInitials = (name) => {
-        if (!name) return "AD";
-        const words = name.trim().split(/\s+/);
-        if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-        return (words[0][0] + words[words.length - 1][0]).toUpperCase();
-    };
+const ProfileSummary = ({ admin, onUpdate }) => {
+    const [loading, setLoading] = useState(false);
 
     const isMac = navigator.userAgent.toLowerCase().includes('mac');
     const isWindows = navigator.userAgent.toLowerCase().includes('windows');
@@ -15,25 +14,45 @@ const ProfileSummary = ({ admin }) => {
     if (isMac) deviceName = "Apple Mac";
     if (isWindows) deviceName = "Windows PC";
 
+    const handleUpload = async (file) => {
+        try {
+            setLoading(true);
+            const response = await uploadAdminAvatar(file);
+            showSuccess(response.message);
+            if (onUpdate) onUpdate(response.data);
+        } catch (error) {
+            showError(getApiErrorMessage(error));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRemove = async () => {
+        try {
+            setLoading(true);
+            const response = await removeAdminAvatar();
+            showSuccess(response.message);
+            if (onUpdate) onUpdate(response.data);
+        } catch (error) {
+            showError(getApiErrorMessage(error));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-6 rounded-2xl border border-[#e9dfd8] bg-white p-6 md:flex-row md:items-center justify-between">
             {/* LEFT SIDE */}
             <div className="flex items-center gap-5">
-                <div className="relative h-20 w-20 shrink-0">
-                    {admin.avatar ? (
-                        <img 
-                            src={admin.avatar_url || admin.avatar} 
-                            alt={admin.full_name} 
-                            className="h-full w-full rounded-full object-cover shadow-sm border border-[#e9dfd8]" 
-                        />
-                    ) : (
-                        <div className="flex h-full w-full items-center justify-center rounded-full bg-[#604238] text-2xl font-bold text-white shadow-sm">
-                            {getInitials(admin.full_name)}
-                        </div>
-                    )}
-                    <button className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#f7f4f1] text-[#604238] hover:bg-[#e9dfd8]">
-                        <Camera size={14} />
-                    </button>
+                <div className="shrink-0">
+                    <AvatarUploader 
+                        avatarUrl={admin.avatar_url || admin.avatar}
+                        name={admin.full_name}
+                        loading={loading}
+                        onUpload={handleUpload}
+                        onRemove={handleRemove}
+                        size="md"
+                    />
                 </div>
 
                 <div>

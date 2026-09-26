@@ -45,10 +45,16 @@ export default function useStaffAuth() {
         window.dispatchEvent(new Event("staff-auth-changed"));
     }, []);
 
+    const updateStaff = useCallback((data) => {
+        localStorage.setItem("staff_data", JSON.stringify(data));
+        window.dispatchEvent(new Event("staff-auth-changed"));
+    }, []);
+
     return {
         isLoggedIn: authState.isLoggedIn,
         staff: authState.staff,
         logout,
-        login
+        login,
+        updateStaff
     };
 }

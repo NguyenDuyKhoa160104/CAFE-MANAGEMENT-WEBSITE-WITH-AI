@@ -29,5 +29,9 @@ export const categoryService = {
 
     updateStatus: async (id, status) => {
         return await adminApi.patch(`${BASE_URL}/${id}/status`, { status });
+    },
+
+    removeImage: async (id) => {
+        return await adminApi.delete(`${BASE_URL}/${id}/image`);
     }
 };

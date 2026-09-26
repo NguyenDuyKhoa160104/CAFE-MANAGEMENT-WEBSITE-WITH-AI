@@ -1,13 +1,48 @@
-import React from "react";
+import React, { useState } from "react";
 import { UserCircle, Mail, Phone, Calendar, ShieldCheck, Briefcase } from "lucide-react";
-import { mockStaff } from "../../../data/staff.mock";
+import useStaffAuth from "../../../hooks/useStaffAuth";
+import AvatarUploader from "../../../components/common/AvatarUploader";
+import { staffProfileService } from "../../../services/staff/profile.service";
+import { showSuccess, showError } from "../../../utils/toast";
+import { getApiErrorMessage } from "../../../utils/apiError";
 
 export default function StaffProfile() {
+    const { staff, updateStaff } = useStaffAuth();
+    const [loading, setLoading] = useState(false);
+
     const POSITIONS = {
         MANAGER: "Quản lý ca",
         CASHIER: "Thu ngân",
         BARISTA: "Pha chế",
         SERVER: "Phục vụ",
+    };
+
+    if (!staff) return null;
+
+    const handleUploadAvatar = async (file) => {
+        try {
+            setLoading(true);
+            const response = await staffProfileService.uploadAvatar(file);
+            showSuccess(response.message);
+            updateStaff(response.data);
+        } catch (error) {
+            showError(getApiErrorMessage(error));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRemoveAvatar = async () => {
+        try {
+            setLoading(true);
+            const response = await staffProfileService.removeAvatar();
+            showSuccess(response.message);
+            updateStaff(response.data);
+        } catch (error) {
+            showError(getApiErrorMessage(error));
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -25,17 +60,16 @@ export default function StaffProfile() {
                     <div className="h-32 bg-[#604238] relative"></div>
                     <div className="px-6 pb-6">
                         <div className="relative -mt-16 flex justify-between items-end mb-4">
-                            {mockStaff.avatar_url ? (
-                                <img
-                                    src={mockStaff.avatar_url}
-                                    alt="Avatar"
-                                    className="h-32 w-32 rounded-full border-4 border-white bg-white object-cover shadow-md"
+                            <div className="shrink-0 mb-4 bg-white rounded-full p-1 border-4 border-white shadow-md">
+                                <AvatarUploader
+                                    avatarUrl={staff.avatar_url || staff.avatar}
+                                    name={staff.full_name}
+                                    loading={loading}
+                                    onUpload={handleUploadAvatar}
+                                    onRemove={handleRemoveAvatar}
+                                    size="lg"
                                 />
-                            ) : (
-                                <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-[#e8dbd1] text-4xl font-bold text-[#604238] shadow-md">
-                                    {mockStaff.full_name.charAt(0).toUpperCase()}
-                                </div>
-                            )}
+                            </div>
                             <div className="flex gap-2">
                                 <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200 shadow-sm flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -45,10 +79,10 @@ export default function StaffProfile() {
                         </div>
 
                         <div>
-                            <h2 className="text-2xl font-bold text-[#49332b]">{mockStaff.full_name}</h2>
+                            <h2 className="text-2xl font-bold text-[#49332b]">{staff.full_name}</h2>
                             <p className="text-sm font-semibold text-[#958981] mt-1 flex items-center gap-2">
-                                <span className="font-mono text-[#604238]">{mockStaff.staff_code}</span> 
-                                • {POSITIONS[mockStaff.position]}
+                                <span className="font-mono text-[#604238]">{staff.staff_code}</span> 
+                                • {POSITIONS[staff.position]}
                             </p>
                         </div>
                     </div>
@@ -69,7 +103,7 @@ export default function StaffProfile() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-[#958981] uppercase tracking-wider">Email</p>
-                                    <p className="text-sm font-medium text-[#49332b]">{mockStaff.email}</p>
+                                    <p className="text-sm font-medium text-[#49332b]">{staff.email}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -78,7 +112,7 @@ export default function StaffProfile() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-[#958981] uppercase tracking-wider">Số điện thoại</p>
-                                    <p className="text-sm font-medium text-[#49332b]">{mockStaff.phone || 'Chưa cập nhật'}</p>
+                                    <p className="text-sm font-medium text-[#49332b]">{staff.phone || 'Chưa cập nhật'}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -87,7 +121,7 @@ export default function StaffProfile() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-[#958981] uppercase tracking-wider">Ngày vào làm</p>
-                                    <p className="text-sm font-medium text-[#49332b]">{new Date(mockStaff.hire_date).toLocaleDateString('vi-VN')}</p>
+                                    <p className="text-sm font-medium text-[#49332b]">{staff.hire_date ? new Date(staff.hire_date).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}</p>
                                 </div>
                             </div>
                         </div>
@@ -107,7 +141,7 @@ export default function StaffProfile() {
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-[#9c513d] uppercase tracking-wider">Vị trí hiện tại</p>
-                                    <p className="text-lg font-bold text-[#604238]">{POSITIONS[mockStaff.position]}</p>
+                                    <p className="text-lg font-bold text-[#604238]">{POSITIONS[staff.position]}</p>
                                 </div>
                             </div>
                             <p className="text-xs text-[#65473c] mt-3 bg-white/50 p-2 rounded-lg">

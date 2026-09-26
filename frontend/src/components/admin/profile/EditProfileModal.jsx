@@ -28,9 +28,6 @@ const EditProfileModal = ({ isOpen, onClose, admin, onSuccess }) => {
                 phone: admin.phone || '',
                 admin_code: admin.admin_code || ''
             });
-            setImagePreview(admin.avatar_url || null);
-            setImageFile(null);
-            setRemoveImage(false);
             setErrors({});
         }
     }, [isOpen, admin]);
@@ -47,44 +44,6 @@ const EditProfileModal = ({ isOpen, onClose, admin, onSuccess }) => {
         }
     };
 
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImageFile(file);
-            setRemoveImage(false);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const handleRemoveImageClick = () => {
-        if (window.confirm("Bạn có chắc chắn muốn xóa ảnh đại diện?")) {
-            handleRemoveAvatar();
-        }
-    };
-
-    const handleRemoveAvatar = async () => {
-        try {
-            setLoading(true);
-            const response = await removeAdminAvatar();
-            showSuccess(response.message);
-            setImageFile(null);
-            setImagePreview(null);
-            setRemoveImage(true);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-            if (onSuccess) onSuccess(response.data);
-        } catch (error) {
-            showError(getApiErrorMessage(error));
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -95,10 +54,6 @@ const EditProfileModal = ({ isOpen, onClose, admin, onSuccess }) => {
             submitData.append("full_name", formData.full_name);
             submitData.append("email", formData.email);
             submitData.append("phone", formData.phone || "");
-            
-            if (imageFile) {
-                submitData.append("avatar", imageFile);
-            }
 
             const response = await updateAdminProfile(submitData);
             showSuccess(response.message);
@@ -137,54 +92,6 @@ const EditProfileModal = ({ isOpen, onClose, admin, onSuccess }) => {
 
                 <form onSubmit={handleSubmit} className="p-6">
                     <div className="space-y-6">
-                        {/* Avatar Upload */}
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-[#302723]">Ảnh đại diện</label>
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-dashed border-[#d5cec8] bg-[#faf8f6]">
-                                    {imagePreview ? (
-                                        <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
-                                    ) : (
-                                        <div className="flex h-full w-full items-center justify-center bg-[#604238] text-xl font-bold text-white">
-                                            {getInitials(formData.full_name || admin?.full_name)}
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                <div>
-                                    <input 
-                                        type="file" 
-                                        accept="image/*" 
-                                        className="hidden" 
-                                        ref={fileInputRef}
-                                        onChange={handleImageChange}
-                                    />
-                                    <div className="flex gap-2">
-                                        <button 
-                                            type="button"
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="flex h-9 items-center gap-2 rounded-lg border border-[#e8dfd9] bg-white px-3 text-xs font-semibold text-[#574943] hover:bg-[#faf6f3]"
-                                        >
-                                            <Upload size={14} />
-                                            Chọn ảnh
-                                        </button>
-                                        
-                                        {imagePreview && (
-                                            <button 
-                                                type="button"
-                                                onClick={handleRemoveImageClick}
-                                                disabled={loading}
-                                                className="flex h-9 items-center rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
-                                            >
-                                                Xóa ảnh
-                                            </button>
-                                        )}
-                                    </div>
-                                    <p className="mt-1.5 text-[10px] text-[#9c918a]">Định dạng JPG, PNG. Kích thước tối đa 2MB.</p>
-                                </div>
-                            </div>
-                        </div>
-
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-[#302723]">Họ và tên *</label>

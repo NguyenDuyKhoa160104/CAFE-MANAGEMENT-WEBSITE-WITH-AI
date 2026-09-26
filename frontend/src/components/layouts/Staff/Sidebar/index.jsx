@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import BrandLogo from "../../../common/BrandLogo";
 import {
     Armchair,
     Coffee,
@@ -51,9 +52,7 @@ export default function StaffSidebar({ isOpen, onClose }) {
 
             <aside className={`fixed left-0 top-0 z-50 flex h-screen w-[240px] flex-col border-r border-[#ebe3dd] bg-[#fbfaf9] transition-transform duration-300 lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
                 <div className="flex h-[72px] items-center border-b border-[#ebe3dd] px-5">
-                    <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#604238] text-white">
-                        <Coffee size={22} />
-                    </div>
+                    <BrandLogo className="mr-3 h-8" />
                     <div>
                         <h2 className="text-lg font-bold text-[#49332b]">CafeFlow</h2>
                         <span className="text-[10px] font-medium text-[#958981] uppercase tracking-wider">

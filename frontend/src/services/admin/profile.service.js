@@ -27,6 +27,17 @@ export const removeAdminAvatar = async () => {
     return response; // returns { message, data }
 };
 
+export const uploadAdminAvatar = async (file) => {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    const response = await adminApi.post('/profile/avatar', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response;
+};
+
 export const logoutAllAdminSessions = async () => {
     const response = await adminApi.post('/logout-all');
     return response; // returns { message }

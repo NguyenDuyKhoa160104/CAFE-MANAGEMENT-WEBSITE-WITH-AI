@@ -15,6 +15,7 @@ import {
     TrendingUp,
     X,
 } from "lucide-react";
+import BrandLogo from "../../../components/common/BrandLogo";
 
 import { adminApi } from "../../../config/axios.config";
 import { showSuccess, showError } from "../../../utils/toast";
@@ -102,8 +103,8 @@ const AdminLogin = () => {
                     {/* Logo */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#604238] shadow">
-                                <Coffee size={24} />
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow overflow-hidden p-1">
+                                <BrandLogo className="h-full w-full object-contain" />
                             </div>
 
                             <div>
@@ -236,9 +237,7 @@ const AdminLogin = () => {
                     <div className="w-full max-w-[520px]">
                         {/* Mobile logo */}
                         <div className="mb-8 flex items-center gap-3 lg:hidden">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#604238] text-white">
-                                <Coffee size={23} />
-                            </div>
+                            <BrandLogo className="h-10" />
 
                             <div>
                                 <h1 className="font-bold text-[#302723]">

@@ -33,5 +33,9 @@ export const productService = {
 
     toggleFeatured: async (id, is_featured) => {
         return await adminApi.patch(`${BASE_URL}/${id}/featured`, { is_featured });
+    },
+
+    removeImage: async (id) => {
+        return await adminApi.delete(`${BASE_URL}/${id}/image`);
     }
 };
