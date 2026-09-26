@@ -50,11 +50,17 @@ export default function useStaffAuth() {
         window.dispatchEvent(new Event("staff-auth-changed"));
     }, []);
 
+    const hasPermission = useCallback((code) => {
+        if (!authState.staff || !authState.staff.permissions) return false;
+        return authState.staff.permissions.includes(code);
+    }, [authState.staff]);
+
     return {
         isLoggedIn: authState.isLoggedIn,
         staff: authState.staff,
         logout,
         login,
-        updateStaff
+        updateStaff,
+        hasPermission
     };
 }

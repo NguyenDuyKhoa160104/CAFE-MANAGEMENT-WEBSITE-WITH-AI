@@ -415,13 +415,18 @@ export default function StaffManagement() {
                                             {staff.staff_code}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span
-                                                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                                                    POSITIONS[staff.position]?.color
-                                                }`}
-                                            >
-                                                {POSITIONS[staff.position]?.label}
-                                            </span>
+                                            <div className="flex flex-col gap-1">
+                                                <span
+                                                    className={`w-max rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                                                        POSITIONS[staff.position]?.color
+                                                    }`}
+                                                >
+                                                    {POSITIONS[staff.position]?.label}
+                                                </span>
+                                                <span className="text-[10px] text-gray-500 font-medium">
+                                                    {staff.role ? staff.role.name : 'Chưa phân quyền'}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
                                             {staff.phone || <span className="text-gray-400 italic">Chưa cập nhật</span>}

@@ -9,6 +9,8 @@ import StaffManagement from '../../pages/Admin/StaffManagement';
 import AdminOrders from '../../pages/Admin/Orders';
 import AdminInvoices from '../../pages/Admin/Invoices';
 import InventoryManagement from '../../pages/Admin/InventoryManagement';
+import RolesAndAttendance from '../../pages/Admin/Roles';
+import PayrollManagement from '../../pages/Admin/Payroll';
 import useAdminAuth from '../../hooks/useAdminAuth';
 
 import AIAdmin from '../../pages/Admin/AI';
@@ -44,6 +46,8 @@ const adminRoutes = (
             <Route path="orders" element={<AdminOrders />} />
             <Route path="invoices" element={<AdminInvoices />} />
             <Route path="inventory" element={<InventoryManagement />} />
+            <Route path="roles" element={<RolesAndAttendance />} />
+            <Route path="payroll" element={<PayrollManagement />} />
             <Route path="profile" element={<Profile />} />
             <Route path="ai" element={<AIAdmin />} />
         </Route>
