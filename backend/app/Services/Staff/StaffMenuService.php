@@ -46,18 +46,24 @@ class StaffMenuService
 
         $products = null;
         
+        $engine = app(\App\Services\Promotions\PromotionEngine::class);
+
         if ($request->has('per_page')) {
             $products = $query->paginate($request->per_page);
             $products->getCollection()->transform(function ($product) {
                 return $this->appendInventoryData($product);
             });
+            // Attach pricing
+            $products->setCollection($engine->attachPricingToProducts($products->getCollection()));
             return $products;
         }
 
         $products = $query->get();
-        return $products->map(function ($product) {
+        $products = $products->map(function ($product) {
             return $this->appendInventoryData($product);
         });
+        
+        return $engine->attachPricingToProducts($products);
     }
 
     /**
@@ -66,7 +72,10 @@ class StaffMenuService
     public function getProductDetail($id)
     {
         $product = Product::with(['category', 'productIngredients.ingredient'])->findOrFail($id);
-        return $this->appendInventoryData($product);
+        $product = $this->appendInventoryData($product);
+        
+        $engine = app(\App\Services\Promotions\PromotionEngine::class);
+        return $engine->attachPricingToProducts(collect([$product]))->first();
     }
     
     /**

@@ -23,6 +23,8 @@ class Order extends Model
         'subtotal',
         'discount_amount',
         'total_amount',
+        'promotion_code',
+        'customer_voucher_id',
         'note',
         'cancel_reason',
         'cancelled_at',
@@ -60,5 +62,15 @@ class Order extends Model
     public function invoice()
     {
         return $this->hasOne(Invoice::class);
+    }
+
+    public function orderPromotion()
+    {
+        return $this->hasOne(OrderPromotion::class);
+    }
+
+    public function customerVoucher()
+    {
+        return $this->belongsTo(CustomerVoucher::class, 'customer_voucher_id');
     }
 }

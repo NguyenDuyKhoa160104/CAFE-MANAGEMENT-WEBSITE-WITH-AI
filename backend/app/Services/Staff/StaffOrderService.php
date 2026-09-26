@@ -10,6 +10,8 @@ use App\Services\Inventory\InventoryConsumptionService;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Carbon\Carbon;
+use App\Services\Promotions\PromotionEngine;
+use App\Models\OrderPromotion;
 
 class StaffOrderService
 {
@@ -113,7 +115,7 @@ class StaffOrderService
                 foreach ($data['items'] as $itemData) {
                     $this->createItemRecord($order, $itemData);
                 }
-                $this->recalculateTotals($order);
+                $this->recalculateTotals($order, $data['promotion_code'] ?? null);
             }
 
             if ($data['order_type'] === 'DINE_IN' && $table) {
@@ -170,6 +172,8 @@ class StaffOrderService
         $item->unit_price = $product->price;
         $item->quantity = $quantity;
         $item->line_total = $product->price * $quantity;
+        $item->discount_amount = 0;
+        $item->final_line_total = $item->line_total;
         $item->note = $itemData['note'] ?? null;
         $item->save();
 
@@ -212,7 +216,7 @@ class StaffOrderService
                 $this->createItemRecord($order, $data);
             }
 
-            $this->recalculateTotals($order);
+            $this->recalculateTotals($order, $order->promotion_code);
             
             return $order->load('items');
         });
@@ -249,7 +253,7 @@ class StaffOrderService
             }
             $item->save();
 
-            $this->recalculateTotals($order);
+            $this->recalculateTotals($order, $order->promotion_code);
 
             return $order->load('items');
         });
@@ -265,7 +269,7 @@ class StaffOrderService
             $item = OrderItem::where('order_id', $order->id)->findOrFail($itemId);
             $item->delete();
 
-            $this->recalculateTotals($order);
+            $this->recalculateTotals($order, $order->promotion_code);
 
             return $order->load('items');
         });
@@ -299,6 +303,18 @@ class StaffOrderService
             if ($lockedOrder->status === 'CONFIRMED' && $newStatus === 'PREPARING') {
                 $inventoryService = app(InventoryConsumptionService::class);
                 $inventoryService->consumeForOrder($lockedOrder, request()->user() ? request()->user()->id : null);
+                
+                // Mark voucher as USED
+                if ($lockedOrder->customer_voucher_id) {
+                    \App\Models\CustomerVoucher::where('id', $lockedOrder->customer_voucher_id)
+                        ->update(['status' => 'USED']);
+                    
+                    // Increment promotion used count
+                    $op = \App\Models\OrderPromotion::where('order_id', $lockedOrder->id)->first();
+                    if ($op && $op->promotion_id) {
+                        \App\Models\Promotion::where('id', $op->promotion_id)->increment('used_count');
+                    }
+                }
             }
 
             $lockedOrder->status = $newStatus;
@@ -325,6 +341,16 @@ class StaffOrderService
             $order->save();
 
             $this->freeTableIfNoActiveOrders($order);
+            
+            // Release voucher
+            if ($order->customer_voucher_id) {
+                \App\Models\CustomerVoucher::where('id', $order->customer_voucher_id)
+                    ->update([
+                        'status' => 'UNUSED',
+                        'used_order_id' => null,
+                        'used_at' => null
+                    ]);
+            }
 
             return $order;
         });
@@ -347,12 +373,65 @@ class StaffOrderService
         }
     }
 
-    public function recalculateTotals($order)
+    public function recalculateTotals($order, $promotionCode = null)
     {
-        $subtotal = OrderItem::where('order_id', $order->id)->sum('line_total');
+        $engine = app(PromotionEngine::class);
+        $items = OrderItem::where('order_id', $order->id)->get();
         
-        $order->subtotal = $subtotal;
-        $order->total_amount = max($subtotal - $order->discount_amount, 0);
+        $payload = $items->map(function ($item) {
+            return [
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+            ];
+        })->toArray();
+
+        try {
+            // Apply code if provided, otherwise auto
+            $result = $engine->calculate($payload, $promotionCode);
+        } catch (\Exception $e) {
+            // If code is invalid during recalculation, fallback to AUTO or clear it
+            if ($promotionCode) {
+                // Try fallback to auto
+                $result = $engine->calculate($payload, null);
+                // Can log or set a message here
+            } else {
+                throw $e;
+            }
+        }
+
+        $order->subtotal = $result['subtotal'];
+        $order->discount_amount = $result['discount_amount'];
+        $order->total_amount = $result['total_amount'];
+        $order->promotion_code = $result['promotion'] ? $result['promotion']['promotion_code'] : null;
         $order->save();
+
+        // Update items with their specific discounts
+        foreach ($items as $idx => $item) {
+            $itemResult = $result['items'][$idx];
+            $item->unit_price = $itemResult['base_price'];
+            $item->line_total = $itemResult['line_total'];
+            $item->discount_amount = $itemResult['discount_amount'];
+            $item->final_line_total = $itemResult['final_line_total'];
+            $item->save();
+        }
+
+        // Manage OrderPromotion snapshot
+        OrderPromotion::where('order_id', $order->id)->delete();
+        
+        if ($result['promotion']) {
+            OrderPromotion::create([
+                'order_id' => $order->id,
+                'promotion_id' => $result['promotion']['id'],
+                'promotion_code' => $result['promotion']['promotion_code'],
+                'promotion_name' => $result['promotion']['name'],
+                'application_mode' => $result['promotion']['application_mode'],
+                'discount_type' => $result['promotion']['discount_type'],
+                'scope' => $result['promotion']['scope'],
+                'discount_value' => $result['promotion']['discount_value'],
+                'discount_amount' => $result['discount_amount'],
+                'snapshot' => json_encode($result['promotion']),
+                'applied_at' => Carbon::now(),
+            ]);
+        }
     }
 }

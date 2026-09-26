@@ -14,6 +14,10 @@ Route::get('/customer/categories', [\App\Http\Controllers\Api\Customer\MenuContr
 Route::get('/customer/products', [\App\Http\Controllers\Api\Customer\MenuController::class, 'products']);
 Route::get('/customer/products/{id}', [\App\Http\Controllers\Api\Customer\MenuController::class, 'productDetail']);
 
+// Customer Promotions
+Route::get('/customer/promotions/active', [\App\Http\Controllers\Customer\PromotionController::class, 'active']);
+Route::post('/customer/promotions/preview', [\App\Http\Controllers\Customer\PromotionController::class, 'preview']);
+
 // Customer AI
 Route::get('/customer/ai/config', [\App\Http\Controllers\Api\Customer\AIChatController::class, 'config']);
 Route::post('/customer/ai/chat', [\App\Http\Controllers\Api\Customer\AIChatController::class, 'chat']);
@@ -21,6 +25,11 @@ Route::post('/customer/ai/chat', [\App\Http\Controllers\Api\Customer\AIChatContr
 // CUSTOMER PROTECTED ROUTES
 // ==========================================
 Route::middleware(['auth:sanctum', 'customer_middleware'])->group(function () {
+    // Vouchers (Wallet)
+    Route::get('/customer/vouchers', [\App\Http\Controllers\Customer\CustomerVoucherController::class, 'index']);
+    Route::get('/customer/vouchers/{id}', [\App\Http\Controllers\Customer\CustomerVoucherController::class, 'show']);
+    Route::post('/customer/vouchers/{id}/preview', [\App\Http\Controllers\Customer\CustomerVoucherController::class, 'preview']);
+
     // Auth
     Route::get('/customer/info', [\App\Http\Controllers\Api\Customer\AuthController::class, 'info']);
     Route::post('/customer/logout', [\App\Http\Controllers\Api\Customer\AuthController::class, 'logout']);
@@ -83,6 +92,9 @@ Route::middleware(['auth:sanctum', 'staff_middleware'])->group(function () {
     Route::get('/staff/products', [\App\Http\Controllers\Api\Staff\MenuController::class, 'getProducts']);
     Route::get('/staff/products/{id}', [\App\Http\Controllers\Api\Staff\MenuController::class, 'getProductDetail']);
 
+    // Staff Promotions
+    Route::post('/staff/promotions/preview', [\App\Http\Controllers\Staff\PromotionController::class, 'preview']);
+
     // Staff Orders
     Route::middleware('staff.permission:orders.view')->group(function () {
         Route::get('/staff/orders', [\App\Http\Controllers\Api\Staff\OrderController::class, 'index']);
@@ -144,6 +156,9 @@ Route::middleware(['auth:sanctum', 'admin_middleware'])->group(function () {
     Route::delete('/admin/profile/avatar', [\App\Http\Controllers\Api\Admin\AdminProfileController::class, 'removeAvatar']);
     // Categories
     Route::get('/admin/categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index']);
+    
+    // Customers
+    Route::get('/admin/customers', [\App\Http\Controllers\Admin\CustomerController::class, 'index']);
     Route::post('/admin/categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store']);
     Route::get('/admin/categories/{id}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'show']);
     Route::put('/admin/categories/{id}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'update']);
@@ -281,4 +296,17 @@ Route::middleware(['auth:sanctum', 'admin_middleware'])->group(function () {
     
     // Payroll Adjustments
     Route::patch('/admin/payrolls/{id}/adjustments', [\App\Http\Controllers\Api\Admin\PayrollController::class, 'adjustPayroll']);
+    
+    // Promotions
+    Route::get('/admin/promotions', [\App\Http\Controllers\Admin\PromotionController::class, 'index']);
+    Route::post('/admin/promotions', [\App\Http\Controllers\Admin\PromotionController::class, 'store']);
+    Route::get('/admin/promotions/{id}', [\App\Http\Controllers\Admin\PromotionController::class, 'show']);
+    Route::put('/admin/promotions/{id}', [\App\Http\Controllers\Admin\PromotionController::class, 'update']);
+    Route::patch('/admin/promotions/{id}/status', [\App\Http\Controllers\Admin\PromotionController::class, 'updateStatus']);
+    Route::delete('/admin/promotions/{id}', [\App\Http\Controllers\Admin\PromotionController::class, 'destroy']);
+    
+    // Admin Customer Vouchers
+    Route::get('/admin/customer-vouchers', [\App\Http\Controllers\Admin\CustomerVoucherController::class, 'index']);
+    Route::post('/admin/customer-vouchers', [\App\Http\Controllers\Admin\CustomerVoucherController::class, 'store']);
+    Route::patch('/admin/customer-vouchers/{id}/revoke', [\App\Http\Controllers\Admin\CustomerVoucherController::class, 'revoke']);
 });

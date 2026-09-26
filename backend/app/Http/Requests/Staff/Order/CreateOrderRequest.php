@@ -25,6 +25,7 @@ class CreateOrderRequest extends FormRequest
             'items.*.product_id' => ['required_with:items', 'exists:products,id'],
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
             'items.*.note' => ['nullable', 'string'],
+            'promotion_code' => ['nullable', 'string', 'max:50'],
         ];
     }
 }

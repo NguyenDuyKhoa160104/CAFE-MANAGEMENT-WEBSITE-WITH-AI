@@ -19,6 +19,8 @@ class StoreOrderRequest extends FormRequest
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.note' => ['nullable', 'string', 'max:255'],
             'note' => ['nullable', 'string', 'max:1000'],
+            'promotion_code' => ['nullable', 'string', 'max:50'],
+            'customer_voucher_id' => ['nullable', 'integer', 'exists:customer_vouchers,id'],
         ];
     }
 }

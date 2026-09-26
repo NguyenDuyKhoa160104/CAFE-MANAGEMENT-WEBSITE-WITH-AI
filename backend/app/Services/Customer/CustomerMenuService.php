@@ -16,7 +16,7 @@ class CustomerMenuService
 
     public function getProducts()
     {
-        return Product::where('status', 'ACTIVE')
+        $products = Product::where('status', 'ACTIVE')
             ->where('recipe_configured', true)
             ->get([
                 'id',
@@ -33,11 +33,14 @@ class CustomerMenuService
                 'inventory_available',
                 'max_producible_quantity'
             ]);
+
+        $engine = app(\App\Services\Promotions\PromotionEngine::class);
+        return $engine->attachPricingToProducts($products);
     }
 
     public function getProductDetail($id)
     {
-        return Product::where('status', 'ACTIVE')
+        $product = Product::where('status', 'ACTIVE')
             ->where('recipe_configured', true)
             ->findOrFail($id, [
                 'id',
@@ -54,5 +57,8 @@ class CustomerMenuService
                 'inventory_available',
                 'max_producible_quantity'
             ]);
+
+        $engine = app(\App\Services\Promotions\PromotionEngine::class);
+        return $engine->attachPricingToProducts(collect([$product]))->first();
     }
 }
