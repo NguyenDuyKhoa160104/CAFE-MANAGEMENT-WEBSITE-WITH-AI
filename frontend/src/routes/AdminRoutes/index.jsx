@@ -14,6 +14,7 @@ import PayrollManagement from '../../pages/Admin/Payroll';
 import useAdminAuth from '../../hooks/useAdminAuth';
 
 import AIAdmin from '../../pages/Admin/AI';
+import PromotionsManagement from '../../pages/Admin/Promotions';
 
 const ProtectedAdminRoute = ({ children }) => {
     const { isLoggedIn } = useAdminAuth();
@@ -50,6 +51,7 @@ const adminRoutes = (
             <Route path="payroll" element={<PayrollManagement />} />
             <Route path="profile" element={<Profile />} />
             <Route path="ai" element={<AIAdmin />} />
+            <Route path="promotions" element={<PromotionsManagement />} />
         </Route>
 
         <Route path="/admin/login" element={<PublicAdminRoute><AdminLogin /></PublicAdminRoute>} />

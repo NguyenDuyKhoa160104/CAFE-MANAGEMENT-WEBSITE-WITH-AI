@@ -16,6 +16,7 @@ import Invoices from '../../pages/Customer/Invoices';
 import InvoiceDetail from '../../pages/Customer/InvoiceDetail';
 import Profile from '../../pages/Customer/Profile';
 import Login from '../../pages/Customer/Login';
+import Vouchers from '../../pages/Customer/Vouchers';
 import Register from '../../pages/Customer/Register';
 
 const customerRoutes = (
@@ -41,6 +42,7 @@ const customerRoutes = (
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/invoices/:id" element={<InvoiceDetail />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/vouchers" element={<Vouchers />} />
         </Route>
     </Route>
 );

@@ -5,7 +5,8 @@ import { useCustomerAuth } from '../../../contexts/CustomerAuthContext';
 import { customerOrderService } from '../../../services/customer/order.service';
 import { showSuccess, showError } from '../../../utils/toast';
 import { getApiErrorMessage } from '../../../utils/apiError';
-import { ShoppingBag, MapPin, User, FileText, CheckCircle } from 'lucide-react';
+import { ShoppingBag, MapPin, User, FileText, CheckCircle, TicketPercent, X } from 'lucide-react';
+import voucherService from '../../../services/customer/voucher.service';
 
 const Checkout = () => {
     const { cart, cartTotal, clearCart } = useCustomerCart();
@@ -13,6 +14,53 @@ const Checkout = () => {
     const navigate = useNavigate();
     const [note, setNote] = useState('');
     const [loading, setLoading] = useState(false);
+    
+    // Voucher logic
+    const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
+    const [vouchers, setVouchers] = useState([]);
+    const [selectedVoucher, setSelectedVoucher] = useState(null);
+    const [previewResult, setPreviewResult] = useState(null);
+    const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
+    
+    const fetchVouchers = async () => {
+        try {
+            const res = await voucherService.getVouchers({ status: 'UNUSED' });
+            setVouchers(res.data?.data || res.data || []);
+        } catch (error) {
+            console.error('Error fetching vouchers:', error);
+        }
+    };
+
+    const handleOpenVoucherModal = () => {
+        fetchVouchers();
+        setIsVoucherModalOpen(true);
+    };
+
+    const handleApplyVoucher = async (voucher) => {
+        try {
+            setIsApplyingVoucher(true);
+            const payload = {
+                items: cart.map(item => ({
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                }))
+            };
+            const res = await voucherService.previewVoucher(voucher.id, payload);
+            setPreviewResult(res.data?.data || res.data);
+            setSelectedVoucher(voucher);
+            setIsVoucherModalOpen(false);
+            showSuccess(`Đã áp dụng voucher: ${voucher.promotion?.name}`);
+        } catch (error) {
+            showError(getApiErrorMessage(error) || "Voucher không khả dụng cho đơn hàng này.");
+        } finally {
+            setIsApplyingVoucher(false);
+        }
+    };
+
+    const handleRemoveVoucher = () => {
+        setSelectedVoucher(null);
+        setPreviewResult(null);
+    };
 
     if (cart.length === 0) {
         navigate('/cart');
@@ -32,7 +80,8 @@ const Checkout = () => {
                     quantity: item.quantity,
                     note: item.note
                 })),
-                note: note
+                note: note,
+                customer_voucher_id: selectedVoucher ? selectedVoucher.id : null
             };
 
             const response = await customerOrderService.createOrder(payload);
@@ -134,28 +183,91 @@ const Checkout = () => {
                                     </div>
                                 ))}
                             </div>
+
+                            {/* Voucher Section */}
+                            <div className="border-t border-[#E9DFD8] pt-6 mb-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="font-bold text-[#302723] flex items-center gap-2">
+                                        <TicketPercent size={18} className="text-[#8e7d5f]" />
+                                        Voucher của bạn
+                                    </h3>
+                                    {!selectedVoucher && (
+                                        <button 
+                                            onClick={handleOpenVoucherModal}
+                                            className="text-sm font-semibold text-[#8e7d5f] hover:text-[#7a6a4f] px-3 py-1 bg-[#8e7d5f]/10 rounded-full"
+                                        >
+                                            Chọn Voucher
+                                        </button>
+                                    )}
+                                </div>
+                                
+                                {selectedVoucher ? (
+                                    <div className="bg-[#8e7d5f]/10 border border-[#8e7d5f]/30 rounded-xl p-4 relative">
+                                        <button 
+                                            onClick={handleRemoveVoucher}
+                                            className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 rounded-full"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                        <div className="flex items-start gap-3">
+                                            <div className="bg-white p-2 rounded-lg shadow-sm">
+                                                <TicketPercent size={20} className="text-[#8e7d5f]" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-900 text-sm">{selectedVoucher.promotion.name}</h4>
+                                                <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">{selectedVoucher.promotion.description}</p>
+                                                {previewResult && previewResult.discount_amount > 0 && (
+                                                    <div className="mt-2 inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-md">
+                                                        - {formatPrice(previewResult.discount_amount)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 flex justify-end">
+                                            <button 
+                                                onClick={handleOpenVoucherModal}
+                                                className="text-xs font-medium text-[#8e7d5f] hover:underline"
+                                            >
+                                                Đổi Voucher khác
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        Bạn chưa áp dụng voucher nào
+                                    </div>
+                                )}
+                            </div>
                             
                             <div className="border-t border-[#E9DFD8] pt-6 mb-8">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-[#958981]">Tạm tính</span>
                                     <span className="font-medium text-[#302723]">{formatPrice(cartTotal)}</span>
                                 </div>
+                                {previewResult && previewResult.discount_amount > 0 && (
+                                    <div className="flex justify-between items-center mb-2 text-green-600">
+                                        <span>Khuyến mãi</span>
+                                        <span className="font-medium">- {formatPrice(previewResult.discount_amount)}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between items-end mt-4">
                                     <span className="text-lg font-bold text-[#302723]">Tổng thanh toán</span>
-                                    <span className="text-3xl font-black text-[#604238]">{formatPrice(cartTotal)}</span>
+                                    <span className="text-3xl font-black text-[#604238]">
+                                        {formatPrice(previewResult ? previewResult.total_amount : cartTotal)}
+                                    </span>
                                 </div>
                             </div>
 
                             <button 
                                 onClick={handleCheckout}
-                                disabled={loading}
+                                disabled={loading || isApplyingVoucher}
                                 className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-md flex justify-center items-center gap-2 ${
-                                    loading 
+                                    (loading || isApplyingVoucher)
                                     ? 'bg-[#E9DFD8] text-[#958981] cursor-not-allowed' 
                                     : 'bg-[#604238] hover:bg-[#4a332b] text-white hover:shadow-lg transform active:scale-[0.98]'
                                 }`}
                             >
-                                {loading ? (
+                                {loading || isApplyingVoucher ? (
                                     <><div className="animate-spin rounded-full h-5 w-5 border-2 border-[#958981] border-t-transparent"></div> Đang xử lý...</>
                                 ) : (
                                     'Đặt hàng ngay'
@@ -168,6 +280,49 @@ const Checkout = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Voucher Modal */}
+            {isVoucherModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-xl flex flex-col max-h-[80vh]">
+                        <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+                            <h3 className="font-bold text-lg flex items-center gap-2">
+                                <TicketPercent size={20} className="text-[#8e7d5f]" />
+                                Chọn Voucher
+                            </h3>
+                            <button onClick={() => setIsVoucherModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-4 overflow-y-auto flex-1 bg-gray-50 space-y-3">
+                            {vouchers.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500">
+                                    <TicketPercent size={40} className="mx-auto mb-2 opacity-30" />
+                                    Bạn không có voucher nào khả dụng
+                                </div>
+                            ) : (
+                                vouchers.map(v => (
+                                    <div key={v.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-start gap-3 relative">
+                                        <div className="bg-[#8e7d5f]/10 p-2 rounded-lg">
+                                            <TicketPercent size={24} className="text-[#8e7d5f]" />
+                                        </div>
+                                        <div className="flex-1 pr-16">
+                                            <h4 className="font-bold text-sm text-gray-900 leading-tight mb-1">{v.promotion.name}</h4>
+                                            <p className="text-xs text-gray-500 line-clamp-2">{v.promotion.description}</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleApplyVoucher(v)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-[#8e7d5f] text-white text-xs font-bold rounded-lg hover:bg-[#7a6a4f] transition-colors"
+                                        >
+                                            Sử dụng
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

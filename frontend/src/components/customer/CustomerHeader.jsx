@@ -88,6 +88,9 @@ const CustomerHeader = () => {
                                 {isDropdownOpen && (
                                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-100">
                                         <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>Hồ sơ cá nhân</Link>
+                                        <Link to="/vouchers" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between" onClick={() => setIsDropdownOpen(false)}>
+                                            <span>Ví Voucher</span>
+                                        </Link>
                                         <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>Đơn hàng của tôi</Link>
                                         <Link to="/invoices" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>Hóa đơn</Link>
                                         <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Đăng xuất</button>
@@ -133,6 +136,7 @@ const CustomerHeader = () => {
                                 <>
                                     <div className="font-semibold mb-2">{customer?.full_name}</div>
                                     <Link to="/profile" className="block py-2" onClick={() => setIsMobileMenuOpen(false)}>Hồ sơ</Link>
+                                    <Link to="/vouchers" className="block py-2" onClick={() => setIsMobileMenuOpen(false)}>Ví Voucher</Link>
                                     <Link to="/invoices" className="block py-2" onClick={() => setIsMobileMenuOpen(false)}>Hóa đơn</Link>
                                     <button onClick={handleLogout} className="block py-2 w-full text-left text-red-600">Đăng xuất</button>
                                 </>
