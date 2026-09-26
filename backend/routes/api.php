@@ -14,6 +14,9 @@ Route::get('/customer/categories', [\App\Http\Controllers\Api\Customer\MenuContr
 Route::get('/customer/products', [\App\Http\Controllers\Api\Customer\MenuController::class, 'products']);
 Route::get('/customer/products/{id}', [\App\Http\Controllers\Api\Customer\MenuController::class, 'productDetail']);
 
+// Customer AI
+Route::get('/customer/ai/config', [\App\Http\Controllers\Api\Customer\AIChatController::class, 'config']);
+Route::post('/customer/ai/chat', [\App\Http\Controllers\Api\Customer\AIChatController::class, 'chat']);
 // ==========================================
 // CUSTOMER PROTECTED ROUTES
 // ==========================================
@@ -185,4 +188,20 @@ Route::middleware(['auth:sanctum', 'admin_middleware'])->group(function () {
     Route::get('/admin/inventory/low-stock', [\App\Http\Controllers\Api\Admin\InventoryController::class, 'lowStock']);
     Route::get('/admin/inventory/detail/{id}', [\App\Http\Controllers\Api\Admin\InventoryController::class, 'ingredientDetail']);
     Route::post('/admin/inventory/adjust', [\App\Http\Controllers\Api\Admin\InventoryController::class, 'adjust']);
+
+    // Admin AI
+    Route::get('/admin/ai/settings', [\App\Http\Controllers\Api\Admin\AISettingController::class, 'index']);
+    Route::put('/admin/ai/settings', [\App\Http\Controllers\Api\Admin\AISettingController::class, 'update']);
+    
+    Route::get('/admin/ai/overview', [\App\Http\Controllers\Api\Admin\AIOverviewController::class, 'index']);
+    
+    Route::get('/admin/ai/conversations', [\App\Http\Controllers\Api\Admin\AIConversationController::class, 'index']);
+    Route::get('/admin/ai/conversations/{id}', [\App\Http\Controllers\Api\Admin\AIConversationController::class, 'show']);
+    
+    Route::get('/admin/ai/knowledge', [\App\Http\Controllers\Api\Admin\AIKnowledgeController::class, 'index']);
+    Route::post('/admin/ai/knowledge', [\App\Http\Controllers\Api\Admin\AIKnowledgeController::class, 'store']);
+    Route::get('/admin/ai/knowledge/{id}', [\App\Http\Controllers\Api\Admin\AIKnowledgeController::class, 'show']);
+    Route::put('/admin/ai/knowledge/{id}', [\App\Http\Controllers\Api\Admin\AIKnowledgeController::class, 'update']);
+    Route::patch('/admin/ai/knowledge/{id}/status', [\App\Http\Controllers\Api\Admin\AIKnowledgeController::class, 'updateStatus']);
+    Route::delete('/admin/ai/knowledge/{id}', [\App\Http\Controllers\Api\Admin\AIKnowledgeController::class, 'destroy']);
 });
