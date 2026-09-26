@@ -37,7 +37,7 @@ class StaffAuthController extends Controller
             ->createToken('staff_token')
             ->plainTextToken;
 
-        $avatarUrl = $staff->avatar ? url('storage/' . $staff->avatar) : null;
+        $avatarUrl = $staff->avatar ? (str_starts_with($staff->avatar, 'http') ? $staff->avatar : url('storage/' . $staff->avatar)) : null;
 
         return response()->json([
             'message' => 'Đăng nhập thành công',
@@ -59,7 +59,7 @@ class StaffAuthController extends Controller
     public function info(Request $request)
     {
         $staff = $request->user();
-        $avatarUrl = $staff->avatar ? url('storage/' . $staff->avatar) : null;
+        $avatarUrl = $staff->avatar ? (str_starts_with($staff->avatar, 'http') ? $staff->avatar : url('storage/' . $staff->avatar)) : null;
         
         $staffData = $staff->toArray();
         $staffData['avatar_url'] = $avatarUrl;
@@ -88,5 +88,64 @@ class StaffAuthController extends Controller
         return response()->json([
             'message' => 'Đã đăng xuất khỏi tất cả thiết bị'
         ], 200);
+    }
+    public function uploadAvatar(\App\Http\Requests\UploadAvatarRequest $request, \App\Services\Cloudinary\CloudinaryService $cloudinary)
+    {
+        $staff = $request->user();
+        $oldPublicId = $staff->avatar_public_id;
+
+        $result = $cloudinary->uploadAvatar($request->file('avatar'), 'staffs');
+
+        if (!$result) {
+            return response()->json([
+                'message' => 'Lỗi khi tải ảnh lên, vui lòng thử lại sau.'
+            ], 500);
+        }
+
+        try {
+            $staff->avatar = $result['url'];
+            $staff->avatar_public_id = $result['public_id'];
+            $staff->save();
+
+            if ($oldPublicId) {
+                $cloudinary->delete($oldPublicId);
+            }
+
+            return response()->json([
+                'message' => 'Cập nhật ảnh đại diện thành công',
+                'data' => array_merge($staff->toArray(), [
+                    'avatar_url' => $staff->avatar
+                ])
+            ]);
+        } catch (\Exception $e) {
+            $cloudinary->delete($result['public_id']);
+            throw $e;
+        }
+    }
+
+    public function removeAvatar(Request $request, \App\Services\Cloudinary\CloudinaryService $cloudinary)
+    {
+        $staff = $request->user();
+
+        if ($staff->avatar_public_id) {
+            $cloudinary->delete($staff->avatar_public_id);
+            $staff->avatar = null;
+            $staff->avatar_public_id = null;
+            $staff->save();
+        } elseif ($staff->avatar) {
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($staff->avatar)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($staff->avatar);
+            }
+            $staff->avatar = null;
+            $staff->avatar_public_id = null;
+            $staff->save();
+        }
+
+        return response()->json([
+            'message' => 'Xóa ảnh đại diện thành công',
+            'data' => array_merge($staff->toArray(), [
+                'avatar_url' => null
+            ])
+        ]);
     }
 }

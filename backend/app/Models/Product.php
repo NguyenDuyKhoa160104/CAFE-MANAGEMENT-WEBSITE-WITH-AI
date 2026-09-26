@@ -16,6 +16,7 @@ class Product extends Model
         'slug',
         'description',
         'image',
+        'image_public_id',
         'price',
         'cost_price',
         'status',
@@ -25,6 +26,10 @@ class Product extends Model
         'max_producible_quantity',
         'is_featured',
         'sort_order',
+    ];
+
+    protected $hidden = [
+        'image_public_id',
     ];
 
     protected function casts(): array

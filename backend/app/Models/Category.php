@@ -17,8 +17,13 @@ class Category extends Model
         'slug',
         'description',
         'image',
+        'image_public_id',
         'sort_order',
         'status',
+    ];
+
+    protected $hidden = [
+        'image_public_id',
     ];
 
     protected function casts(): array

@@ -20,6 +20,7 @@ class Staff extends Authenticatable
         'phone',
         'password',
         'avatar',
+        'avatar_public_id',
         'position',
         'hire_date',
         'base_salary',

@@ -25,6 +25,12 @@ return [
             'driver' => 'session',
             'provider' => 'staffs',
         ],
+
+        // CUSTOMER
+        'customer' => [
+            'driver' => 'session', // Sanctum will intercept this, but standard practice is ok
+            'provider' => 'customers',
+        ],
     ],
 
 
@@ -45,6 +51,12 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\Staff::class,
         ],
+
+        // CUSTOMER
+        'customers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Customer::class,
+        ],
     ],
 
     'passwords' => [
@@ -57,6 +69,13 @@ return [
         // ADMIN
         'admins' => [
             'provider' => 'admins',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+        // CUSTOMER
+        'customers' => [
+            'provider' => 'customers',
             'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,

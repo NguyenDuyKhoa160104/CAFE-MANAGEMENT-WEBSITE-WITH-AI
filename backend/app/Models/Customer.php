@@ -7,12 +7,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class Admin extends Authenticatable
+class Customer extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
-    protected $table = "admins";
+
+    protected $table = 'customers';
+
     protected $fillable = [
-        'admin_code',
         'full_name',
         'email',
         'phone',
@@ -21,8 +22,13 @@ class Admin extends Authenticatable
         'avatar_public_id',
         'status',
     ];
+
     protected $hidden = [
         'password',
-        'remember_token',
     ];
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class);
+    }
 }

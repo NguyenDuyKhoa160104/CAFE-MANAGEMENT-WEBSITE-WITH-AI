@@ -93,7 +93,12 @@ class ProductController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $cloudinaryService = app(\App\Services\Cloudinary\CloudinaryService::class);
+            $uploadResult = $cloudinaryService->uploadProduct($request->file('image'));
+            if ($uploadResult) {
+                $data['image'] = $uploadResult['url'];
+                $data['image_public_id'] = $uploadResult['public_id'];
+            }
         }
 
         if (!isset($data['status'])) {
@@ -150,10 +155,21 @@ class ProductController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
+            $cloudinaryService = app(\App\Services\Cloudinary\CloudinaryService::class);
+            $uploadResult = $cloudinaryService->uploadProduct($request->file('image'));
+            
+            if ($uploadResult) {
+                $data['image'] = $uploadResult['url'];
+                $data['image_public_id'] = $uploadResult['public_id'];
+                
+                // Delete old image after successful upload
+                if ($product->image_public_id) {
+                    $cloudinaryService->delete($product->image_public_id);
+                }
             }
-            $data['image'] = $request->file('image')->store('products', 'public');
+        } elseif ($request->has('image') && is_string($request->image)) {
+            // Do not update image field if it's a string URL from frontend
+            unset($data['image']);
         }
 
         $product->update($data);
@@ -224,14 +240,44 @@ class ProductController extends Controller
             ], 404);
         }
 
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
-
+        $imagePublicId = $product->image_public_id;
         $product->delete();
+
+        if ($imagePublicId) {
+            $cloudinaryService = app(\App\Services\Cloudinary\CloudinaryService::class);
+            $cloudinaryService->delete($imagePublicId);
+        }
 
         return response()->json([
             'message' => 'Xóa sản phẩm thành công'
+        ]);
+    }
+
+    public function removeImage($id)
+    {
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json([
+                'message' => 'Không tìm thấy sản phẩm'
+            ], 404);
+        }
+
+        if ($product->image_public_id) {
+            $cloudinaryService = app(\App\Services\Cloudinary\CloudinaryService::class);
+            $cloudinaryService->delete($product->image_public_id);
+        }
+
+        $product->update([
+            'image' => null,
+            'image_public_id' => null
+        ]);
+        
+        $product->load('category');
+
+        return response()->json([
+            'message' => 'Xóa ảnh sản phẩm thành công',
+            'data' => $product
         ]);
     }
 }

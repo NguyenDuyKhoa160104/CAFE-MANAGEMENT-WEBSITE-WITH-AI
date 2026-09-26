@@ -17,7 +17,7 @@ class AdminProfileController extends Controller
     private function formatAdminResponse($admin)
     {
         $data = $admin->toArray();
-        $data['avatar_url'] = $admin->avatar ? url('storage/' . $admin->avatar) : null;
+        $data['avatar_url'] = $admin->avatar ? (str_starts_with($admin->avatar, 'http') ? $admin->avatar : url('storage/' . $admin->avatar)) : null;
         return $data;
     }
 
@@ -45,22 +45,6 @@ class AdminProfileController extends Controller
         $admin->email = $request->email;
         $admin->phone = $request->phone;
 
-        if ($request->hasFile('avatar')) {
-            // Delete old avatar if exists
-            if ($admin->avatar && Storage::disk('public')->exists($admin->avatar)) {
-                Storage::disk('public')->delete($admin->avatar);
-            }
-
-            // Store new avatar
-            $path = $request->file('avatar')->store('admins/avatars', 'public');
-            $admin->avatar = $path;
-        } elseif ($request->has('remove_image') && $request->remove_image == 1) {
-            if ($admin->avatar && Storage::disk('public')->exists($admin->avatar)) {
-                Storage::disk('public')->delete($admin->avatar);
-            }
-            $admin->avatar = null;
-        }
-
         $admin->save();
 
         return response()->json([
@@ -70,18 +54,62 @@ class AdminProfileController extends Controller
     }
 
     /**
+     * Upload ảnh đại diện mới qua Cloudinary
+     */
+    public function uploadAvatar(\App\Http\Requests\UploadAvatarRequest $request, \App\Services\Cloudinary\CloudinaryService $cloudinary)
+    {
+        $admin = $request->user();
+        $oldPublicId = $admin->avatar_public_id;
+
+        $result = $cloudinary->uploadAvatar($request->file('avatar'), 'admins');
+
+        if (!$result) {
+            return response()->json([
+                'message' => 'Lỗi khi tải ảnh lên, vui lòng thử lại sau.'
+            ], 500);
+        }
+
+        try {
+            $admin->avatar = $result['url'];
+            $admin->avatar_public_id = $result['public_id'];
+            $admin->save();
+
+            // Nếu update DB thành công và có ảnh cũ thì xóa ảnh cũ
+            if ($oldPublicId) {
+                $cloudinary->delete($oldPublicId);
+            }
+
+            return response()->json([
+                'message' => 'Cập nhật ảnh đại diện thành công',
+                'data' => $this->formatAdminResponse($admin)
+            ]);
+        } catch (\Exception $e) {
+            // Xóa ảnh mới vừa upload lên nếu có lỗi DB
+            $cloudinary->delete($result['public_id']);
+            throw $e;
+        }
+    }
+
+    /**
      * Xóa ảnh đại diện
      */
-    public function removeAvatar(Request $request)
+    public function removeAvatar(Request $request, \App\Services\Cloudinary\CloudinaryService $cloudinary)
     {
         $admin = $request->user();
 
-        if ($admin->avatar) {
+        if ($admin->avatar_public_id) {
+            $cloudinary->delete($admin->avatar_public_id);
+            
+            $admin->avatar = null;
+            $admin->avatar_public_id = null;
+            $admin->save();
+        } elseif ($admin->avatar) {
+            // In case there is an old local avatar
             if (Storage::disk('public')->exists($admin->avatar)) {
                 Storage::disk('public')->delete($admin->avatar);
             }
-            
             $admin->avatar = null;
+            $admin->avatar_public_id = null;
             $admin->save();
         }
 

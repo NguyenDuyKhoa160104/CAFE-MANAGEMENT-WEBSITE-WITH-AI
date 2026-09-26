@@ -4,6 +4,50 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 
+// ==========================================
+// CUSTOMER PUBLIC ROUTES
+// ==========================================
+Route::post('/customer/register', [\App\Http\Controllers\Api\Customer\AuthController::class, 'register']);
+Route::post('/customer/login', [\App\Http\Controllers\Api\Customer\AuthController::class, 'login']);
+
+Route::get('/customer/categories', [\App\Http\Controllers\Api\Customer\MenuController::class, 'categories']);
+Route::get('/customer/products', [\App\Http\Controllers\Api\Customer\MenuController::class, 'products']);
+Route::get('/customer/products/{id}', [\App\Http\Controllers\Api\Customer\MenuController::class, 'productDetail']);
+
+// ==========================================
+// CUSTOMER PROTECTED ROUTES
+// ==========================================
+Route::middleware(['auth:sanctum', 'customer_middleware'])->group(function () {
+    // Auth
+    Route::get('/customer/info', [\App\Http\Controllers\Api\Customer\AuthController::class, 'info']);
+    Route::post('/customer/logout', [\App\Http\Controllers\Api\Customer\AuthController::class, 'logout']);
+    Route::post('/customer/logout-all', [\App\Http\Controllers\Api\Customer\AuthController::class, 'logoutAll']);
+
+    // Profile
+    Route::get('/customer/profile', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'show']);
+    Route::put('/customer/profile', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'update']);
+    Route::patch('/customer/profile/password', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'changePassword']);
+    Route::post('/customer/profile/avatar', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'uploadAvatar']);
+    Route::delete('/customer/profile/avatar', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'removeAvatar']);
+
+    // Reservations
+    Route::get('/customer/reservations/available-tables', [\App\Http\Controllers\Api\Customer\ReservationController::class, 'availableTables']);
+    Route::get('/customer/reservations', [\App\Http\Controllers\Api\Customer\ReservationController::class, 'index']);
+    Route::post('/customer/reservations', [\App\Http\Controllers\Api\Customer\ReservationController::class, 'store']);
+    Route::get('/customer/reservations/{id}', [\App\Http\Controllers\Api\Customer\ReservationController::class, 'show']);
+    Route::patch('/customer/reservations/{id}/cancel', [\App\Http\Controllers\Api\Customer\ReservationController::class, 'cancel']);
+
+    // Orders
+    Route::get('/customer/orders', [\App\Http\Controllers\Api\Customer\OrderController::class, 'index']);
+    Route::post('/customer/orders', [\App\Http\Controllers\Api\Customer\OrderController::class, 'store']);
+    Route::get('/customer/orders/{id}', [\App\Http\Controllers\Api\Customer\OrderController::class, 'show']);
+    Route::patch('/customer/orders/{id}/cancel', [\App\Http\Controllers\Api\Customer\OrderController::class, 'cancel']);
+
+    // Invoices
+    Route::get('/customer/invoices', [\App\Http\Controllers\Api\Customer\InvoiceController::class, 'index']);
+    Route::get('/customer/invoices/{id}', [\App\Http\Controllers\Api\Customer\InvoiceController::class, 'show']);
+});
+
 // LOGIN ADMIN
 Route::post('/admin/login', [AdminController::class, 'login']);
 
@@ -14,6 +58,10 @@ Route::middleware(['auth:sanctum', 'staff_middleware'])->group(function () {
     Route::get('/staff/info', [\App\Http\Controllers\Api\Staff\StaffAuthController::class, 'info']);
     Route::post('/staff/logout', [\App\Http\Controllers\Api\Staff\StaffAuthController::class, 'logout']);
     Route::post('/staff/logout-all', [\App\Http\Controllers\Api\Staff\StaffAuthController::class, 'logoutAll']);
+    
+    // Profile
+    Route::post('/staff/profile/avatar', [\App\Http\Controllers\Api\Staff\StaffAuthController::class, 'uploadAvatar']);
+    Route::delete('/staff/profile/avatar', [\App\Http\Controllers\Api\Staff\StaffAuthController::class, 'removeAvatar']);
 
     // Staff Table & Area
     Route::get('/staff/areas', [\App\Http\Controllers\Api\Staff\TableController::class, 'getAreas']);
@@ -52,23 +100,28 @@ Route::middleware(['auth:sanctum', 'admin_middleware'])->group(function () {
     Route::put('/admin/profile', [\App\Http\Controllers\Api\Admin\AdminProfileController::class, 'update']);
     Route::post('/admin/profile', [\App\Http\Controllers\Api\Admin\AdminProfileController::class, 'update']); // Fallback for multipart form-data
     Route::patch('/admin/profile/password', [\App\Http\Controllers\Api\Admin\AdminProfileController::class, 'changePassword']);
+    Route::post('/admin/profile/avatar', [\App\Http\Controllers\Api\Admin\AdminProfileController::class, 'uploadAvatar']);
     Route::delete('/admin/profile/avatar', [\App\Http\Controllers\Api\Admin\AdminProfileController::class, 'removeAvatar']);
     // Categories
     Route::get('/admin/categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index']);
     Route::post('/admin/categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store']);
     Route::get('/admin/categories/{id}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'show']);
     Route::put('/admin/categories/{id}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'update']);
+    Route::post('/admin/categories/{id}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'update']); // Fallback for multipart form-data
     Route::delete('/admin/categories/{id}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy']);
     Route::patch('/admin/categories/{id}/status', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'updateStatus']);
+    Route::delete('/admin/categories/{id}/image', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'removeImage']);
 
     // Products
     Route::get('/admin/products', [\App\Http\Controllers\Api\Admin\ProductController::class, 'index']);
     Route::post('/admin/products', [\App\Http\Controllers\Api\Admin\ProductController::class, 'store']);
     Route::get('/admin/products/{id}', [\App\Http\Controllers\Api\Admin\ProductController::class, 'show']);
     Route::put('/admin/products/{id}', [\App\Http\Controllers\Api\Admin\ProductController::class, 'update']);
+    Route::post('/admin/products/{id}', [\App\Http\Controllers\Api\Admin\ProductController::class, 'update']); // Fallback for multipart form-data
     Route::delete('/admin/products/{id}', [\App\Http\Controllers\Api\Admin\ProductController::class, 'destroy']);
     Route::patch('/admin/products/{id}/status', [\App\Http\Controllers\Api\Admin\ProductController::class, 'updateStatus']);
     Route::patch('/admin/products/{id}/featured', [\App\Http\Controllers\Api\Admin\ProductController::class, 'toggleFeatured']);
+    Route::delete('/admin/products/{id}/image', [\App\Http\Controllers\Api\Admin\ProductController::class, 'removeImage']);
 
     // Areas
     Route::get('/admin/areas', [\App\Http\Controllers\Api\Admin\AreaController::class, 'index']);

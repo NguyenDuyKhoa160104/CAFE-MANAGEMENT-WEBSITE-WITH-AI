@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             AreaSeeder::class,
             CafeTableSeeder::class,
             StaffSeeder::class,
+            CustomerSeeder::class,
         ]);
     }
 }

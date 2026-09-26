@@ -77,7 +77,12 @@ class CategoryController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            $cloudinaryService = app(\App\Services\Cloudinary\CloudinaryService::class);
+            $uploadResult = $cloudinaryService->uploadCategory($request->file('image'));
+            if ($uploadResult) {
+                $data['image'] = $uploadResult['url'];
+                $data['image_public_id'] = $uploadResult['public_id'];
+            }
         }
 
         if (!isset($data['status'])) {
@@ -132,10 +137,21 @@ class CategoryController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            if ($category->image) {
-                Storage::disk('public')->delete($category->image);
+            $cloudinaryService = app(\App\Services\Cloudinary\CloudinaryService::class);
+            $uploadResult = $cloudinaryService->uploadCategory($request->file('image'));
+            
+            if ($uploadResult) {
+                $data['image'] = $uploadResult['url'];
+                $data['image_public_id'] = $uploadResult['public_id'];
+                
+                // Delete old image after successful upload
+                if ($category->image_public_id) {
+                    $cloudinaryService->delete($category->image_public_id);
+                }
             }
-            $data['image'] = $request->file('image')->store('categories', 'public');
+        } elseif ($request->has('image') && is_string($request->image)) {
+            // Do not update image field if it's a string URL from frontend
+            unset($data['image']);
         }
 
         $category->update($data);
@@ -186,14 +202,42 @@ class CategoryController extends Controller
             ], 409);
         }
 
-        if ($category->image) {
-            Storage::disk('public')->delete($category->image);
-        }
-
+        $imagePublicId = $category->image_public_id;
         $category->delete();
+
+        if ($imagePublicId) {
+            $cloudinaryService = app(\App\Services\Cloudinary\CloudinaryService::class);
+            $cloudinaryService->delete($imagePublicId);
+        }
 
         return response()->json([
             'message' => 'Xóa danh mục thành công'
+        ]);
+    }
+
+    public function removeImage($id)
+    {
+        $category = Category::find($id);
+
+        if (!$category) {
+            return response()->json([
+                'message' => 'Không tìm thấy danh mục'
+            ], 404);
+        }
+
+        if ($category->image_public_id) {
+            $cloudinaryService = app(\App\Services\Cloudinary\CloudinaryService::class);
+            $cloudinaryService->delete($category->image_public_id);
+        }
+
+        $category->update([
+            'image' => null,
+            'image_public_id' => null
+        ]);
+
+        return response()->json([
+            'message' => 'Xóa ảnh danh mục thành công',
+            'data' => $category
         ]);
     }
 }
