@@ -34,7 +34,7 @@ class GeminiService
         $url = "{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}";
 
         $contents = [];
-        
+
         // Map history to Gemini API format
         foreach ($history as $msg) {
             $role = ($msg['role'] === 'ASSISTANT') ? 'model' : 'user';
@@ -77,7 +77,7 @@ class GeminiService
 
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
                     return [
                         'status' => 'SUCCESS',
@@ -92,15 +92,40 @@ class GeminiService
             }
 
             Log::error('Gemini API Error: ' . $response->body());
-            
+
+            if ($response->status() === 429) {
+                return [
+                    'status' => 'ERROR',
+                    'error_type' => 'QUOTA_EXCEEDED',
+                    'message' => 'Hết quota API Key.',
+                ];
+            }
+
+            if ($response->status() === 503) {
+                return [
+                    'status' => 'ERROR',
+                    'error_type' => 'HIGH_DEMAND',
+                    'message' => 'Server AI bị quá tải.',
+                ];
+            }
+
             return [
                 'status' => 'ERROR',
                 'message' => 'Có lỗi xảy ra khi giao tiếp với AI. Vui lòng thử lại sau.',
             ];
         } catch (\Exception $e) {
             Log::error('Gemini API Exception: ' . $e->getMessage());
+
+            $errorType = null;
+            if (str_contains($e->getMessage(), '429')) {
+                $errorType = 'QUOTA_EXCEEDED';
+            } elseif (str_contains($e->getMessage(), '503')) {
+                $errorType = 'HIGH_DEMAND';
+            }
+
             return [
                 'status' => 'ERROR',
+                'error_type' => $errorType,
                 'message' => 'Lỗi kết nối AI: ' . $e->getMessage(),
             ];
         }

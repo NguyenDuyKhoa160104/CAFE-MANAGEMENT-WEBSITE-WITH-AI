@@ -166,11 +166,20 @@ Không được tự bịa thông tin. Trả lời bằng tiếng Việt tự nh
                 'status' => 'ERROR',
             ]);
             
+            $replyMessage = $settings->fallback_message;
+            if (isset($aiResponse['error_type'])) {
+                if ($aiResponse['error_type'] === 'QUOTA_EXCEEDED') {
+                    $replyMessage = 'Hệ thống AI đang tạm ngưng do giới hạn của gói miễn phí. Vui lòng thử lại sau chốc lát!';
+                } elseif ($aiResponse['error_type'] === 'HIGH_DEMAND') {
+                    $replyMessage = 'Hệ thống AI của Google hiện đang quá tải. Xin bạn vui lòng thử lại sau ít phút!';
+                }
+            }
+            
             return [
                 'conversation_id' => $conversation->id,
                 'conversation_code' => $conversation->conversation_code,
                 'assistant_name' => $settings->assistant_name,
-                'reply' => $settings->fallback_message,
+                'reply' => $replyMessage,
                 'intent' => $intent,
                 'status' => 'ERROR',
                 'fallback' => true
