@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bot, MessageCircle, Send, X, RotateCcw, Minimize2 } from 'lucide-react';
 import { customerAIService } from '../../../services/customer/ai.service';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 const AIChatBubble = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -153,7 +154,19 @@ const AIChatBubble = () => {
                                 {messages.map((msg, idx) => (
                                     <div key={idx} className={`flex ${msg.role === 'USER' ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 shadow-sm text-sm ${msg.role === 'USER' ? 'bg-[#604238] text-white rounded-br-none' : 'bg-white text-[#302723] border border-[#E9DFD8] rounded-bl-none'}`}>
-                                            <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                                            <div className="markdown-content space-y-1.5 leading-relaxed break-words">
+                                                <ReactMarkdown 
+                                                    components={{
+                                                        p: ({node, ...props}) => <p className="whitespace-pre-wrap" {...props} />,
+                                                        strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
+                                                        ul: ({node, ...props}) => <ul className="list-disc ml-4 space-y-1 my-1" {...props} />,
+                                                        ol: ({node, ...props}) => <ol className="list-decimal ml-4 space-y-1 my-1" {...props} />,
+                                                        li: ({node, ...props}) => <li {...props} />
+                                                    }}
+                                                >
+                                                    {msg.content}
+                                                </ReactMarkdown>
+                                            </div>
                                             
                                             {msg.metadata?.action && (
                                                 <button
@@ -169,10 +182,13 @@ const AIChatBubble = () => {
                                 
                                 {isTyping && (
                                     <div className="flex justify-start">
-                                        <div className="bg-white border border-[#E9DFD8] rounded-2xl rounded-bl-none px-4 py-3 flex gap-1 items-center shadow-sm">
-                                            <div className="w-1.5 h-1.5 bg-[#958981] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                            <div className="w-1.5 h-1.5 bg-[#958981] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                            <div className="w-1.5 h-1.5 bg-[#958981] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                        <div className="bg-white border border-[#E9DFD8] rounded-2xl rounded-bl-none px-4 py-3 flex gap-2 items-center shadow-sm">
+                                            <div className="flex gap-1">
+                                                <div className="w-1.5 h-1.5 bg-[#958981] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                                <div className="w-1.5 h-1.5 bg-[#958981] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                                <div className="w-1.5 h-1.5 bg-[#958981] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                            </div>
+                                            <span className="text-xs text-[#958981]">CafeFlow đang trả lời...</span>
                                         </div>
                                     </div>
                                 )}
