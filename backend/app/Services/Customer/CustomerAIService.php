@@ -5,17 +5,27 @@ namespace App\Services\Customer;
 use App\Models\AISetting;
 use App\Models\AIConversation;
 use App\Models\AIMessage;
-use App\Services\AI\Providers\MockAIProvider;
+use App\Services\AI\GeminiService;
+use App\Services\AI\AiContextService;
+use App\Services\AI\AiIntentService;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class CustomerAIService
 {
-    protected $aiProvider;
+    protected $geminiService;
+    protected $contextService;
+    protected $intentService;
 
-    public function __construct(MockAIProvider $aiProvider)
-    {
-        $this->aiProvider = $aiProvider;
+    public function __construct(
+        GeminiService $geminiService,
+        AiContextService $contextService,
+        AiIntentService $intentService
+    ) {
+        $this->geminiService = $geminiService;
+        $this->contextService = $contextService;
+        $this->intentService = $intentService;
     }
 
     public function getConfig()
@@ -56,6 +66,15 @@ class CustomerAIService
         $sessionKey = $data['session_key'] ?? null;
         $messageText = $data['message'];
 
+        // Prevent prompt injection somewhat
+        if (preg_match('/system prompt|API key|password|ignore previous|bỏ qua mọi hướng dẫn/i', $messageText)) {
+            return [
+                'status' => 'SUCCESS',
+                'intent' => 'OTHER',
+                'reply' => 'Xin lỗi, tôi không thể trả lời câu hỏi này. Tôi chỉ có thể giúp bạn với các dịch vụ của CafeFlow.',
+            ];
+        }
+
         // Enforce basic limit
         $today = Carbon::today();
         $messageCount = 0;
@@ -73,7 +92,7 @@ class CustomerAIService
         if ($messageCount >= $settings->daily_message_limit) {
             return [
                 'status' => 'ERROR',
-                'reply' => 'Bạn đã đạt giới hạn tin nhắn hôm nay.',
+                'reply' => 'Bạn đã đạt giới hạn trò chuyện hôm nay. Vui lòng quay lại vào ngày mai.',
             ];
         }
 
@@ -94,21 +113,68 @@ class CustomerAIService
                 'session_key' => $sessionKey,
                 'started_at' => now(),
                 'last_message_at' => now(),
+                'status' => 'ACTIVE'
             ]);
         }
 
         // Save User Message
+        $intent = $this->intentService->detectIntent($messageText);
+
         AIMessage::create([
             'conversation_id' => $conversation->id,
             'role' => 'USER',
             'content' => $messageText,
+            'intent' => $intent,
+            'status' => 'SUCCESS'
         ]);
 
-        // Generate Response
-        $aiResponse = $this->aiProvider->generateResponse($messageText);
+        // Build context
+        $context = $this->contextService->getContextByIntent($intent, $customerId);
 
-        if ($aiResponse['status'] === 'FALLBACK') {
-            $aiResponse['reply'] = $settings->fallback_message;
+        // Fetch History
+        $historyLimit = $settings->history_limit ?? 5;
+        $historyMessages = AIMessage::where('conversation_id', $conversation->id)
+            ->where('status', 'SUCCESS')
+            ->orderBy('created_at', 'desc')
+            ->limit($historyLimit)
+            ->get()
+            ->reverse()
+            ->toArray();
+
+        // System Instruction
+        $systemInstruction = $settings->system_prompt ?? "Bạn là CafeFlow Assistant, trợ lý AI của quán CafeFlow.
+Bạn hỗ trợ khách hàng về thực đơn, giá sản phẩm, danh mục đồ uống, khuyến mãi, đặt bàn, đặt món, thanh toán, đơn hàng và thông tin hoạt động của quán. Luôn ưu tiên dữ liệu được cung cấp từ hệ thống.
+Không được tự bịa thông tin. Trả lời bằng tiếng Việt tự nhiên, thân thiện, ngắn gọn và dễ hiểu.";
+
+        // Append context to system instruction or as a system note
+        if (!empty($context)) {
+            $systemInstruction .= "\n\nDỮ LIỆU HỆ THỐNG HIỆN TẠI:\n" . $context;
+        }
+
+        // Generate Response via Gemini
+        $aiResponse = $this->geminiService->generateContent($messageText, $historyMessages, $systemInstruction);
+
+        if ($aiResponse['status'] === 'ERROR') {
+            Log::error("Gemini fallback triggered for message: " . $messageText);
+            
+            // Save Assistant Message as ERROR
+            AIMessage::create([
+                'conversation_id' => $conversation->id,
+                'role' => 'ASSISTANT',
+                'content' => 'Error: ' . $aiResponse['message'],
+                'intent' => $intent,
+                'status' => 'ERROR',
+            ]);
+            
+            return [
+                'conversation_id' => $conversation->id,
+                'conversation_code' => $conversation->conversation_code,
+                'assistant_name' => $settings->assistant_name,
+                'reply' => $settings->fallback_message,
+                'intent' => $intent,
+                'status' => 'ERROR',
+                'fallback' => true
+            ];
         }
 
         // Save Assistant Message
@@ -116,9 +182,8 @@ class CustomerAIService
             'conversation_id' => $conversation->id,
             'role' => 'ASSISTANT',
             'content' => $aiResponse['reply'],
-            'intent' => $aiResponse['intent'],
-            'status' => $aiResponse['status'],
-            'metadata' => $aiResponse['metadata'] ?? null,
+            'intent' => $intent,
+            'status' => 'SUCCESS',
         ]);
 
         $conversation->update(['last_message_at' => now()]);
@@ -128,9 +193,9 @@ class CustomerAIService
             'conversation_code' => $conversation->conversation_code,
             'assistant_name' => $settings->assistant_name,
             'reply' => $aiResponse['reply'],
-            'intent' => $aiResponse['intent'],
-            'status' => $aiResponse['status'],
-            'metadata' => $aiResponse['metadata'] ?? null,
+            'intent' => $intent,
+            'status' => 'SUCCESS',
+            'fallback' => false
         ];
     }
 }

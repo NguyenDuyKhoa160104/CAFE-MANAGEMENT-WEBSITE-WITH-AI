@@ -18,7 +18,13 @@ class DatabaseSeeder extends Seeder
             AreaSeeder::class,
             CafeTableSeeder::class,
             StaffSeeder::class,
+            RolePermissionSeeder::class,
             CustomerSeeder::class,
+            PromotionSeeder::class,
+            WorkShiftSeeder::class,
+            AIKnowledgeEntrySeeder::class,
+            AISettingSeeder::class,
+            DevelopmentOrderSeeder::class,
         ]);
     }
 }
