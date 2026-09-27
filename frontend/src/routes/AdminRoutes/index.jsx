@@ -11,36 +11,19 @@ import AdminInvoices from '../../pages/Admin/Invoices';
 import InventoryManagement from '../../pages/Admin/InventoryManagement';
 import RolesAndAttendance from '../../pages/Admin/Roles';
 import PayrollManagement from '../../pages/Admin/Payroll';
-import useAdminAuth from '../../hooks/useAdminAuth';
+import { ProtectedAdminRoute, PublicAdminRoute } from './AdminGuards';
 
 import AIAdmin from '../../pages/Admin/AI';
 import PromotionsManagement from '../../pages/Admin/Promotions';
-
-const ProtectedAdminRoute = ({ children }) => {
-    const { isLoggedIn } = useAdminAuth();
-
-    if (!isLoggedIn) {
-        return <Navigate to="/admin/login" replace />;
-    }
-
-    return children;
-};
-
-const PublicAdminRoute = ({ children }) => {
-    const { isLoggedIn } = useAdminAuth();
-
-    if (isLoggedIn) {
-        return <Navigate to="/admin/dashboard" replace />;
-    }
-
-    return children;
-};
+import Directory from '../../pages/Admin/Directory';
 
 const adminRoutes = (
     <Route>
         <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="customers" element={<Directory key="customers" kind="customers" />} />
+            <Route path="reservations" element={<Directory key="reservations" kind="reservations" />} />
             <Route path="menus" element={<MenuManagement />} />
             <Route path="tables" element={<TableManagement />} />
             <Route path="staffs" element={<StaffManagement />} />

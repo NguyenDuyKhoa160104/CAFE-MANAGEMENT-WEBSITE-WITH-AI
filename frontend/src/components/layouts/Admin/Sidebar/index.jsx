@@ -1,11 +1,10 @@
-import React from "react";
 import { NavLink } from "react-router-dom";
 import BrandLogo from "../../../common/BrandLogo";
 
 import {
     Armchair,
     BadgePercent,
-    BarChart3,
+    CalendarCheck,
     BrainCircuit,
     Boxes,
     Coffee,
@@ -73,9 +72,14 @@ const menuItems = [
         path: "/admin/payroll",
     },
     {
-        name: "Báo cáo & thống kê",
-        icon: BarChart3,
-        path: "/admin/reports",
+        name: "Danh sách khách hàng",
+        icon: Users,
+        path: "/admin/customers",
+    },
+    {
+        name: "Danh sách đặt bàn",
+        icon: CalendarCheck,
+        path: "/admin/reservations",
     },
     {
         name: "Quản lý AI",

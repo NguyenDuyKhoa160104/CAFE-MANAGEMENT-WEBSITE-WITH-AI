@@ -143,6 +143,8 @@ Route::middleware(['auth:sanctum', 'staff_middleware'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'admin_middleware'])->group(function () {
+    Route::get('/admin/dashboard', \App\Http\Controllers\Api\Admin\DashboardController::class);
+    Route::get('/admin/reservations', [\App\Http\Controllers\Api\Admin\ReservationController::class, 'index']);
     Route::post('/admin/info', [AdminController::class, 'info']);
     Route::post('/admin/logout', [AdminController::class, 'logout']);
     Route::post('/admin/logout-all', [AdminController::class, 'logoutAll']);

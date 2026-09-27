@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Shield, Clock, CalendarDays, ClipboardCheck } from 'lucide-react';
 import PageHeader from '../../../components/common/PageHeader';
 import RolesTab from './components/RolesTab';
@@ -7,7 +8,8 @@ import AssignmentsTab from './components/AssignmentsTab';
 import AttendanceTab from './components/AttendanceTab';
 
 const RolesAndAttendance = () => {
-    const [activeTab, setActiveTab] = useState('roles');
+    const [params] = useSearchParams();
+    const [activeTab, setActiveTab] = useState(() => ['roles', 'shifts', 'assignments', 'attendance'].includes(params.get('tab')) ? params.get('tab') : 'roles');
 
     const tabs = [
         { id: 'roles', label: 'Vai trò & Quyền', icon: Shield },

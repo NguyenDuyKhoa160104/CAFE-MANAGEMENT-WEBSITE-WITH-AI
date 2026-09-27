@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-    Bell,
     ChevronDown,
     LogOut,
     Menu,
-    Search,
     User,
     MonitorOff,
 } from "lucide-react";
@@ -18,16 +16,19 @@ import useAdminAuth from "../../../../hooks/useAdminAuth";
 const routeTitles = {
     "/admin": "Dashboard",
     "/admin/dashboard": "Dashboard",
-    "/admin/users": "Quản lý nhân viên",
+    "/admin/staffs": "Quản lý nhân viên",
+    "/admin/customers": "Danh sách khách hàng",
+    "/admin/reservations": "Danh sách đặt bàn",
     "/admin/roles": "Phân quyền & chấm công",
     "/admin/tables": "Quản lý bàn",
     "/admin/menus": "Quản lý thực đơn",
-    "/admin/orders": "Quản lý hóa đơn",
+    "/admin/orders": "Quản lý đơn hàng",
+    "/admin/invoices": "Quản lý hóa đơn",
     "/admin/inventory": "Quản lý kho",
     "/admin/promotions": "Quản lý khuyến mãi",
     "/admin/payroll": "Quản lý bảng lương",
     "/admin/reports": "Báo cáo & thống kê",
-    "/admin/ai-insights": "AI Analytics",
+    "/admin/ai": "Quản lý AI",
     "/admin/profile": "Tài khoản cá nhân",
 };
 
@@ -129,7 +130,7 @@ const AdminHeader = ({ onToggleSidebar }) => {
                     {(isLoggedIn && admin) && (
                         <p className="mt-0.5 text-xs text-[#998b83]">
                             Xin chào,{" "}
-                            {admin.full_name} 👋
+                            {admin.full_name}
                         </p>
                     )}
                 </div>
@@ -137,32 +138,6 @@ const AdminHeader = ({ onToggleSidebar }) => {
 
             {/* RIGHT */}
             <div className="flex items-center gap-3">
-                {/* SEARCH */}
-                <div className="hidden h-10 w-[310px] items-center gap-2 rounded-lg border border-[#e8dfd9] bg-[#faf8f6] px-3 lg:flex">
-                    <Search
-                        size={17}
-                        className="text-[#9c918a]"
-                    />
-
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm nhân viên, đơn hàng..."
-                        className="w-full bg-transparent text-xs text-[#302723] outline-none placeholder:text-[#aaa09a]"
-                    />
-                </div>
-
-                {/* NOTIFICATION */}
-                {(isLoggedIn && admin) && (
-                    <button
-                        type="button"
-                        className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#e8dfd9] bg-white transition hover:bg-[#faf6f3]"
-                    >
-                        <Bell size={18} />
-
-                        <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
-                    </button>
-                )}
-
                 {/* PROFILE */}
                 {(isLoggedIn && admin) ? (
                     <div className="relative">

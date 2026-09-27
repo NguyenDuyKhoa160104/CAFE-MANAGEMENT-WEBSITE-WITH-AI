@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Invoice;
-use Carbon\Carbon;
+use App\Services\Admin\DashboardRange;
+use App\Services\Admin\RevenueService;
+use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
@@ -14,10 +15,10 @@ class InvoiceController extends Controller
         $query = Invoice::with(['order.table', 'staff']);
 
         if ($request->has('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('invoice_code', 'like', '%' . $request->search . '%')
-                  ->orWhere('customer_name', 'like', '%' . $request->search . '%')
-                  ->orWhere('customer_phone', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('invoice_code', 'like', '%'.$request->search.'%')
+                    ->orWhere('customer_name', 'like', '%'.$request->search.'%')
+                    ->orWhere('customer_phone', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -37,28 +38,27 @@ class InvoiceController extends Controller
 
         return response()->json([
             'message' => 'Lấy danh sách hóa đơn thành công',
-            'data' => $invoices
+            'data' => $invoices,
         ]);
     }
 
     public function show($id)
     {
         $invoice = Invoice::with(['order.items', 'order.table', 'staff', 'payment'])->findOrFail($id);
-        
+
         return response()->json([
             'message' => 'Lấy chi tiết hóa đơn thành công',
-            'data' => $invoice
+            'data' => $invoice,
         ]);
     }
 
     public function dashboardSummary()
     {
-        $today = Carbon::today();
-        
-        $totalRevenue = Invoice::whereDate('issued_at', $today)->sum('total_amount');
-        $totalOrders = Invoice::whereDate('issued_at', $today)->count();
-        $cashRevenue = Invoice::whereDate('issued_at', $today)->where('payment_method', 'CASH')->sum('total_amount');
-        $transferRevenue = Invoice::whereDate('issued_at', $today)->where('payment_method', 'BANK_TRANSFER')->sum('total_amount');
+        $query = app(RevenueService::class)->query(DashboardRange::make(['range' => 'TODAY']));
+        $totalRevenue = (clone $query)->sum('amount');
+        $totalOrders = (clone $query)->distinct()->count('order_id');
+        $cashRevenue = (clone $query)->where('payment_method', 'CASH')->sum('amount');
+        $transferRevenue = (clone $query)->where('payment_method', 'BANK_TRANSFER')->sum('amount');
 
         return response()->json([
             'message' => 'Lấy thống kê thành công',
@@ -66,8 +66,8 @@ class InvoiceController extends Controller
                 'total_revenue' => $totalRevenue,
                 'total_orders' => $totalOrders,
                 'cash_revenue' => $cashRevenue,
-                'transfer_revenue' => $transferRevenue
-            ]
+                'transfer_revenue' => $transferRevenue,
+            ],
         ]);
     }
 }
